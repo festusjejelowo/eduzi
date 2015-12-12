@@ -1,0 +1,6 @@
+{
+  "name": "eduzi social",
+  "description": "An that help through daily issue.",
+  "image": "heroku/java",
+  "addons": [ "heroku-postgresql" ]
+}

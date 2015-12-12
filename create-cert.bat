@@ -1,0 +1,3 @@
+D:\jdk1.7.0-64\bin\keytool -genkey -dname "cn=eduzi, ou=enginnering, o=Ocular-Minds Software, c=NG" -alias eduzi -keypass casona9 -keystore eduzi.ssl.keystore -storepass casona9 -validity 480
+D:\jdk1.7.0-64\bin\keytool -export -alias eduzi -keystore eduzi.ssl.keystore -file eduzi.ssl.cer -storepass casona9 -keypass casona9
+D:\jdk1.7.0-64\bin\keytool -import -alias eduzi -file eduzi.ssl.cer -keypass casona9 -keystore eduzissl.bks -storetype BKS -storepass casona9 -providerpath F:\eclipse-64bit\workspace\eduzi\libs\bcprov-jdk15on-146.jar -providerClass org.bouncycastle.jce.provider.BouncyCastleProvider
