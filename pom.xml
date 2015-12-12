@@ -7,6 +7,14 @@
   <version>1.0</version>
   <name>com.ocularminds.eduzi</name>
   <url>http://maven.apache.org</url>
+  <repositories>
+      <!--other repositories if any-->
+      <repository>
+          <id>project.local</id>
+          <name>eduzi</name>
+          <url>file:${project.basedir}/repo</url>
+      </repository>
+</repositories>
   <dependencies>
     <dependency>
       <groupId>junit</groupId>
@@ -121,7 +129,6 @@
 	<artifactId>gson</artifactId>
 	<version>2.5</version>
 </dependency>
-<!--
 <dependency>
             <groupId>com.jaunt.code</groupId>
             <artifactId>jaunt</artifactId>
@@ -137,7 +144,6 @@
         <artifactId>bson</artifactId>
         <version>2.13.3</version>
     </dependency>
--->
 </dependencies>
 <build>
     <plugins>
