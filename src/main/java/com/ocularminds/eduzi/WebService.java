@@ -61,12 +61,9 @@ public class WebService {
 
 	Spark.get("/ping", (request, response) -> {return new Fault("00","Ok ready.");},new JsonFront());
 
-	Spark.before("/protected/*", (request, response) -> {
-	     // ... check if authenticated
-	     halt(401, "Go Away!");
-     });
+	Spark.before("/protected/*", (request, response) -> {halt(401, "Go Away!"); });
 
-     Spark.get("/api/locate/:longitude/:latitude/:range", (request, response) -> {
+    Spark.get("/api/locate/:longitude/:latitude/:range", (request, response) -> {
 
 		   String longitude = request.params(":longitude");
 		   String latitude = request.params(":latitude");
