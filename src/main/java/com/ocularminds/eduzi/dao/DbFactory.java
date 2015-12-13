@@ -39,6 +39,18 @@ public class DbFactory {
   }
 
 
+
+  	try {
+  		  em.getTransaction().begin();
+  		  // Operations that modify the database should come here.
+  		  em.getTransaction().commit();
+  	  }
+  	  finally {
+  		  if (em.getTransaction().isActive())
+  			  em.getTransaction().rollback();
+	}
+
+
   	/**
   	Properties props = new Properties();
   	props.setProperty("dataSourceClassName", "org.postgresql.ds.PGSimpleDataSource");

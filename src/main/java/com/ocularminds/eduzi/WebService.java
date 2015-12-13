@@ -4,6 +4,8 @@ import java.sql.*;
 import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.List;
+import java.lang.reflect.Type;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -15,10 +17,13 @@ import spark.Spark;
 import spark.Request;
 import spark.template.freemarker.FreeMarkerEngine;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+import static j2html.TagCreator.*;
 import com.ocularminds.eduzi.util.FeedCache;
 
 import com.heroku.sdk.jdbc.DatabaseUrl;
-import com.google.gson.Gson;
+
 
 public class WebService {
 
@@ -29,12 +34,6 @@ public class WebService {
 		cache = FeedCache.instance();
 	}
 
-  private static boolean shouldReturnHtml(Request request) {
-
-	  String accept = request.headers("Accept");
-	  return accept != null && accept.contains("text/html");
-  }
-
   public static void main(String[] args) {
 
        WebService ws = new WebService();
@@ -44,31 +43,70 @@ public class WebService {
   private void listen(){
 
 	 Gson gson = new Gson();
-	 port(Integer.valueOf(System.getenv("PORT")));
-	 staticFileLocation("/public");
-
+	 //Spark.port(9998);
+	 Spark.port(Integer.valueOf(System.getenv("PORT")));
+	 Spark.staticFileLocation("/public");
+	  //index.html is served at localhost:4567 (default port)
+	 Spark.webSocket("/chat", ChatWebSocketHandler.class);
 	 get("/", (request, response) -> {
 	             Map<String, Object> attributes = new HashMap<>();
 	             attributes.put("message", "Hello World!");
 	             return new ModelAndView(attributes, "index.ftl");
         }, new FreeMarkerEngine());
+     get("/chat", (request, response) -> {
+		 Map<String, Object> attributes = new HashMap<>();
+		 attributes.put("message", "Hello World!");
+		 return new ModelAndView(attributes, "chat.ftl");
+     }, new FreeMarkerEngine());
 
-	Spark.get("/ping", (req, res) -> {return new Fault("00","Ok ready.");},gson::toJson);
+	Spark.get("/ping", (request, response) -> {return new Fault("00","Ok ready.");},new JsonFront());
 
-	/* Spark.before("/protected/*", (request, response) -> {
+	Spark.before("/protected/*", (request, response) -> {
 	     // ... check if authenticated
 	     halt(401, "Go Away!");
-     });*/
+     });
 
-	 /*
-     get("/throwexception", (request, response) -> {
-	     throw new NotFoundException();
+     Spark.get("/api/locate/:longitude/:latitude/:range", (request, response) -> {
+
+		   String longitude = request.params(":longitude");
+		   String latitude = request.params(":latitude");
+		   String distance = request.params(":range");
+
+		   List<String> all = new ArrayList();
+		   all.add("Festus, 200");
+		   all.add("Tolu all");
+		   response.status(200);
+		   response.type("application/json");
+		  return all;
+
+	  },new JsonFront());
+
+	  Spark.post("/loader/push",(request, response) -> {
+
+			Type listType = new TypeToken<ArrayList<SearchObjectCache>>() {}.getType();
+			List<SearchObjectCache> data = gson.fromJson(request.body(), listType);
+
+			System.out.println("push receives data size "+data.size());
+			Fault fault = new Fault("00","Success");
+
+			if(data == null || data.size() == 0) fault = new Fault("51","No data uploaded");
+			boolean isOperationSuccessful = cache.load(data);
+			if(!isOperationSuccessful) fault = new Fault("10","Service not available. Try again");
+
+			return fault;
+
+	 },new JsonFront());
+
+     Spark.get("/throwexception", (request, response) -> {
+	     throw new Exception();
 	 });
 
-	 exception(NotFoundException.class, (e, request, response) -> {
+	 exception(Exception.class, (e, request, response) -> {
 	     response.status(404);
 	     response.body("Resource not found");
-	 });*/
+	 });
+
+
 
 	  /*Spark.post("/login", (request, response) -> {
 			return ConnectionSession.login(request, response);
@@ -95,43 +133,7 @@ public class WebService {
 			return DeployControl.postSubmit(request, response);
 	});
 
-	try {
-		  em.getTransaction().begin();
-		  // Operations that modify the database should come here.
-		  em.getTransaction().commit();
-	  }
-	  finally {
-		  if (em.getTransaction().isActive())
-			  em.getTransaction().rollback();
-	}
-	*
-
-	  Spark.get("/", (request, response) -> {
-			  Map<String, Object> attributes = new HashMap<>();
-			  attributes.put("message", "Hello World!");
-			  return new ModelAndView(attributes, "index.ftl");
-		  }, new FreeMarkerEngine());
-
-	  Spark.get("/ping", (request, response) -> {
-				Map<String, Object> attributes = new HashMap<>();
-				attributes.put("message", "Service is up and running!");
-				return new ModelAndView(attributes, "index.ftl");
-			}, new FreeMarkerEngine());
-
-	Spark.get("/api/locate/:longitude/:latitude/:range", (request, response) -> {
-
-	   String longitude = request.params(":longitude");
-	   String latitude = request.params(":latitude");
-	   String distance = request.params(":range");
-
-	   List<String> all = new ArrayList();
-	   all.add("Festus, 200");
-	   all.add("Tolu all");
-	   response.status(200);
-	   response.type("application/json");
-		 return dataToJson(all);
-	 }
-  /*
+    /*
 	 get("/users/:id", (req, res) -> {
 
 	   String id = req.params(":id");
@@ -148,17 +150,6 @@ public class WebService {
 	   return dataToJson(new String("{error:\"No user with id "+id+" found\"}"));
 
 	 }, json());
-
-	  Spark.post("/load",(req, res) -> {
-
-			request.body();
-			System.out.println("push receives data size "+data.size());
-			String json = "{error:\"Success\"}";
-			if(data == null || data.size() == 0) json = "{error:\"No data uploaded\"}";
-			boolean isOperationSuccessful = cache.load(data);
-			if(!isOperationSuccessful) json = "{error:\"Service not available. Try again\"");
-
-		},json);
 
 	 //updating user
 	/* Spark.put("/users/:id", (req, res) -> userService.updateUser(
