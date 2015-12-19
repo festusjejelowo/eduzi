@@ -22,6 +22,23 @@ public class Feed implements java.io.Serializable {
 
 	private String url;
 
+	public Feed(Long id,String category,Date time,String text,String name,String icon,String image,String url){
+
+		setId(id);
+		setCategory(category);
+		setTime(time);
+		setText(text);
+		setName(name);
+		setIcon(icon);
+		setImage(image);
+		setUrl(url);
+
+	}
+
+	public Feed(){
+
+	}
+
 	public Long getId() {
 		return id;
 	}

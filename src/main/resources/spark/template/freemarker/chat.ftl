@@ -4,17 +4,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>WebsSockets</title>
     <link rel="stylesheet" href="/style.css">
+    <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
 </head>
 <body>
 <div class="chat">
   <header>
     <div class="menu-icon"><span class="entypo-menu"></span></div>
     <h1>Chats</h1>
+    <span></span>
   </header>
   <div class="new" id="chatControls">
     <p><span class="entypo-feather"></span> New Message</p>
     <input id="message" placeholder="Type your message">
-    <button id="send">Send</button>
+    <button id="send" class="btn btn-default">Send</button>
   </div>
   <section class="messages">
     <div class="message">
@@ -37,10 +39,9 @@
     </div>
   </section>
   <footer><p>end of messages</p></footer>
-</div>    
-    <ul id="userlist"> <!-- Built by JS --> </ul>
-    <div id="chat">    <!-- Built by JS --> </div>
-    <script src="/chat.js"></script>
+</div>  
+<script type="text/javascript" src="/scripts/jquery-1.9.1.min.js"></script>
+<script src="/scripts/chat.js"></script>
 </body>
 </html>
 

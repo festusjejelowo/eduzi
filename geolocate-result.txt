@@ -1,0 +1,29 @@
+
+{   "html_attributions" : [],   "results" : [      {         "geometry" : {            "location" : {               "lat" : 6.5487825,               "lng" : 3.397504999999999            }         },         "icon" : "https://maps.gstatic.com/mapfiles/place_api/icons/geocode-71.png",         "id" : "5a1551f01c8f29ecfaf6ac7109457518270da5cb",         "name" : "Third Mainland Bridge",         "place_id" : "ChIJ-egmWGqNOxARQoVtKH3t1lg",         "reference" : "CpQBgwAAAAtoTrdNOIoPvc-2O8nRRBTQFxslw7ZAV5tsBiFJ2u1D5IRUtl6MWPMC_lICoEWwOGzCcFIV3EEcO8P27PlaheUoRe200S-CV4Wz1TEG6uZhI7hJfTAKILCld5VCxMyq492rtoh36gst5U6W41lkKNG1so9R_0YbGWH22aEmEBBcqGdC0OHow_0PK4Bsy0WrjBIQafjb1MIJYVOEBus2G8UuLRoUulE75o5cS_Q0vdmPzkdbBQ28ioQ",         "scope" : "GOOGLE",         "types" : [ "route" ],         "vicinity" : "Somolu"      },      {         "geometry" : {            "location" : {               "lat" : 6.5536278,               "lng" : 3.4006205            },            "viewport" : {               "northeast" : {                  "lat" : 6.5661112,                  "lng" : 3.4084814               },               "southwest" : {                  "lat" : 6.538333199999999,                  "lng" : 3.3956325               }            }         },         "icon" : "https://maps.gstatic.com/mapfiles/place_api/icons/geocode-71.png",         "id" : "51db16c838569854f4cd5bb6f44620fcd348bb5f",         "name" : "Oworonshoki",         "place_id" : "ChIJqa0ZykONOxAREatOuI_I6N0",         "reference" : "CoQBcQAAAEE_k03Fz-53SQ8sAF230hhrdO55sN40ruHkXX2JaYlCRXM57UlIrh4hcKokqe9nvILgyCLmkXwMVt9UiyRTP9_ZSiX1ejz8COATboFR1CNYvYvkuBfCwkniJVTZkxtFu9x99Zop4GVDuoS6WiYKlSDtKtpxadYbo3Ncfj4pCreyEhCKjiYn5J9OQkx1QeuBVWJxGhQHLXCGNtR3jJaLRDMIfiSt_11-0w",         "scope" : "GOOGLE",         "types" : [ "locality", "political" ],         "vicinity" : "Oworonshoki"      }   ],   "status" : "OK"}
+{  
+"html_attributions" : [],   
+"results" : [     
+            {         "geometry" : 
+                                  {"location" : { "lat" : 6.5487825,"lng" : 3.397504999999999}},
+                                  "icon" : "https://maps.gstatic.com/mapfiles/place_api/icons/geocode-71.png",
+                                  "id" : "5a1551f01c8f29ecfaf6ac7109457518270da5cb",         
+                                  "name" : "Third Mainland Bridge",         
+                                  "place_id" : "ChIJ-egmWGqNOxARQoVtKH3t1lg",         
+                                  "reference" : "CpQBgwAAAAtoTrdNOIoPvc-2O8nRRBTQFxslw7ZAV5tsBiFJ2u1D5IRUtl6MWPMC_lICoEWwOGzCcFIV3EEcO8P27PlaheUoRe200S-CV4Wz1TEG6uZhI7hJfTAKILCld5VCxMyq492rtoh36gst5U6W41lkKNG1so9R_0YbGWH22aEmEBBcqGdC0OHow_0PK4Bsy0WrjBIQafjb1MIJYVOEBus2G8UuLRoUulE75o5cS_Q0vdmPzkdbBQ28ioQ",         
+                                  "scope" : "GOOGLE",         
+                                  "types" : [ "route" ],
+                                  "vicinity" : "Somolu"
+                                  },      
+             {         "geometry" : {
+                                 "location" : {"lat" : 6.5536278,"lng" : 3.4006205},
+                                 "viewport" : {"northeast" : {"lat" : 6.5661112, "lng" : 3.4084814},"southwest" : {"lat" : 6.538333199999999,"lng" : 3.3956325}            } },  
+                                 "icon" : "https://maps.gstatic.com/mapfiles/place_api/icons/geocode-71.png",         
+                                 "id" : "51db16c838569854f4cd5bb6f44620fcd348bb5f",         
+                                 "name" : "Oworonshoki",         
+                                 "place_id" : "ChIJqa0ZykONOxAREatOuI_I6N0",         
+                                 "reference" : "CoQBcQAAAEE_k03Fz-53SQ8sAF230hhrdO55sN40ruHkXX2JaYlCRXM57UlIrh4hcKokqe9nvILgyCLmkXwMVt9UiyRTP9_ZSiX1ejz8COATboFR1CNYvYvkuBfCwkniJVTZkxtFu9x99Zop4GVDuoS6WiYKlSDtKtpxadYbo3Ncfj4pCreyEhCKjiYn5J9OQkx1QeuBVWJxGhQHLXCGNtR3jJaLRDMIfiSt_11-0w",         
+                                 "scope" : "GOOGLE",         
+                                 "types" : [ "locality", "political" ],         
+                                 "vicinity" : "Oworonshoki" }],   
+                                 "status" : "OK"
+                                 }

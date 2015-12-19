@@ -45,6 +45,7 @@ public class SearchObjectLoader {
 			} else {
 				System.out.println("Failed to fetch data!!");
 			}
+
 		}catch(Exception e){
 
 			System.out.println("[eduzi] error loading data to server.");

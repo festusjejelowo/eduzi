@@ -189,6 +189,7 @@ public class SearchAgent implements Callable<List<SearchObjectCache>> {
 				  ol.innerText().trim().replaceAll("\\s+", " ").contains("trafficalert")||
 				  ol.innerText().trim().replaceAll("\\s+", " ").contains("trafficwatch")||
 				  ol.innerText().trim().replaceAll("\\s+", " ").contains("Traffic Cam")||
+				  ol.innerText().trim().replaceAll("\\s+", " ").contains("trafficlord")||
 				  ol.innerText().trim().replaceAll("\\s+", " ").contains("Traffic Update")){
 					  //skip
 				  }else{

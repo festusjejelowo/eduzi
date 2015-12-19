@@ -55,7 +55,7 @@ public class MemoryCacheTest {
         cache.put("Paypal", "Paypal");
         // Adding 3 seconds sleep.. Both above objects will be removed from
         // Cache because of timeToLiveInSeconds value
-        Thread.sleep(3000);
+      //  Thread.sleep(3000);
 
         System.out.println("Two objects are added but reached timeToLive. cache.size(): " + cache.size());
 
@@ -67,7 +67,7 @@ public class MemoryCacheTest {
         // Test with timeToLiveInSeconds = 100 seconds
         // timerIntervalInSeconds = 100 seconds
         // maxItems = 500000
-
+/*
         MemoryCache<String, String> cache = new MemoryCache<String, String>(100, 100, 500000);
 
         for (int i = 0; i < size; i++) {
@@ -80,7 +80,7 @@ public class MemoryCacheTest {
         cache.cleanup();
         double finish = (double) (System.currentTimeMillis() - start) / 1000.0;
 
-        System.out.println("Cleanup times for " + size + " objects are " + finish + " s");
+        System.out.println("Cleanup times for " + size + " objects are " + finish + " s");*/
 
     }
 }

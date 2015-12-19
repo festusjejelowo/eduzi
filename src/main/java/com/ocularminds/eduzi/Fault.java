@@ -4,6 +4,7 @@ public class Fault implements java.io.Serializable{
 
    private String error;
    private String fault;
+   private String group;
    private Object data;
 
    public Fault(String error,String fault){
@@ -19,6 +20,14 @@ public class Fault implements java.io.Serializable{
       this.fault = fault;
       this.data = data;
 
+   }
+
+   public String getGroup(){
+       return group;
+   }
+
+   public void setGroup(String group){
+	   this.group = group;
    }
 
    public String getError(){

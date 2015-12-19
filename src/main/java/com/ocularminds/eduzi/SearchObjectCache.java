@@ -7,9 +7,9 @@ public class SearchObjectCache implements java.io.Serializable{
 
   private int id;
   private String url;
-  private String category;
+  String category;
   private String title;
-  private String text;
+  String text;
   private Date date;
 
   public SearchObjectCache(){
@@ -19,6 +19,7 @@ public class SearchObjectCache implements java.io.Serializable{
   public SearchObjectCache(int id,String url,String category,String text,Date date){
 
   	this.id = id;
+  	this.url = url;
   	this.category = category;
   	this.text = text;
   	this.date = date;
@@ -70,6 +71,11 @@ public class SearchObjectCache implements java.io.Serializable{
 
   public Date getDate(){
 	  return this.date;
+  }
+
+  @Override
+  public String toString(){
+	  return text;
   }
 
 	@Override
