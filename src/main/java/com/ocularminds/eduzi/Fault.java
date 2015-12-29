@@ -7,6 +7,8 @@ public class Fault implements java.io.Serializable{
    private String group;
    private Object data;
 
+   public Fault(){}
+
    public Fault(String error,String fault){
 
       this.error = error;

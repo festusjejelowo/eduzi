@@ -19,9 +19,17 @@ import com.ocularminds.eduzi.vao.Place;
 public class SearchPlace {
 
 	public static String EDUZI_GOOGLE_GEOKEY = "AIzaSyDH4-YeYCdjvXN6bbzAoLhypHdu0mCX83o";
+	public static String EDUZI_GOOGLE_DIRKEY = "AIzaSyBXjGHEeOP9ZSQCuOivf-9ZlDQZdalHNa4";
+	public static String EDUZI_OPWEATHER_KEY = "873b6d60d403c65dc6d5a2ba55346d61";
 	public static final double EARTH_RADIUS = 6372.8d;
 	public static int DRIVE_MODE = 0;
 	public static int WALK_MODE = 1;
+
+	//http://api.openweathermap.org/data/2.5/forecast/city?id=524901&APPID=873b6d60d403c65dc6d5a2ba55346d61
+	//http://api.openweathermap.org/data/2.5/forecast/daily?q=Lagos,NG&mode=json&units=metric&cnt=7APPID=873b6d60d403c65dc6d5a2ba55346d61
+
+	//web: java $JAVA_OPTS -Dconfig.file=application.conf -Djava.util.logging.config.file=logging.properties -cp "target/lib/*" org.openscoring.server.Main --port $PORT --model-dir "pmml"
+
 
 
    /**
@@ -102,6 +110,9 @@ public class SearchPlace {
 	}
 
 	public static String search(String latitude,String longitude,String distance,String type,String name){
+
+		//direcrion api
+		//https://maps.googleapis.com/maps/api/directions/json?origin=magodo,%20Lagos&destination=Victorial%20Island,Lagos&key=
 
 		//-33.8670522,151.1957362&radius=500&types=food&name=cruise
 		StringBuffer received = new StringBuffer();

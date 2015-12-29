@@ -1,25 +1,44 @@
 package com.ocularminds.eduzi.vao;
 
 import java.util.Date;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 
+@Entity
+@Table(name="edz_feed",uniqueConstraints={@UniqueConstraint(columnNames={"fid"})})
 public class Feed implements java.io.Serializable {
 
 	private static final long serialVersionUID = 8881008581492811600L;
 
+	@Id
+	@GeneratedValue(strategy=GenerationType.IDENTITY)
+    @Column(name="fid", nullable=false, unique=true, length=11)
 	private Long id;
 
+	@Column(name="cat", nullable=true,length=18)
 	private String category;
 
+	@Column(name="time", nullable=true)
 	private Date time;
 
+	@Column(name="text", nullable=true)
 	private String text;
 
+	@Column(name="name", nullable=false,length=26)
 	private String name;
 
+	@Column(name="icon", nullable=true,length=26)
 	private String icon;
 
+	@Column(name="image", nullable=true,length=75)
 	private String image;
 
+	@Column(name="url", nullable=true,length=75)
 	private String url;
 
 	public Feed(Long id,String category,Date time,String text,String name,String icon,String image,String url){

@@ -4,6 +4,12 @@ import java.sql.*;
 import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.Map;
+import java.io.File;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.FileNotFoundException;
+import java.nio.file.Files;
+
 import java.util.List;
 import java.util.Locale;
 import java.lang.reflect.Type;
@@ -17,6 +23,7 @@ import spark.template.freemarker.FreeMarkerEngine;
 import spark.ModelAndView;
 import spark.Spark;
 import spark.Request;
+import spark.utils.StringUtils;
 import spark.template.freemarker.FreeMarkerEngine;
 
 import com.google.gson.Gson;
@@ -25,10 +32,26 @@ import static j2html.TagCreator.*;
 
 import com.ocularminds.eduzi.vao.Feed;
 import com.ocularminds.eduzi.util.FeedCache;
+import com.ocularminds.eduzi.util.FileUtil;
+import com.ocularminds.eduzi.util.PasswordUtil;
 import com.ocularminds.eduzi.vao.Place;
+import com.ocularminds.eduzi.vao.User;
+import com.ocularminds.eduzi.vao.Comment;
+import com.ocularminds.eduzi.vao.Message;
+import com.ocularminds.eduzi.dao.Authorizer;
+import com.ocularminds.eduzi.dao.PostWriter;
+import com.ocularminds.eduzi.dao.DbFactory;
 
 import com.heroku.sdk.jdbc.DatabaseUrl;
 import java.util.concurrent.TimeUnit;
+
+import org.apache.commons.beanutils.BeanUtils;
+import javax.servlet.http.Part;
+import javax.servlet.ServletOutputStream;
+import javax.servlet.MultipartConfigElement;
+
+import org.eclipse.jetty.util.MultiMap;
+import org.eclipse.jetty.util.UrlEncoded;
 import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
 
@@ -36,12 +59,38 @@ public class WebService {
 
 	FeedCache cache;
 	Gson gson;
+	Authorizer authorizer;
+	PostWriter writer;
+
+	final File upload = new File("upload");
+	private static final String USER_SESSION_ID = "user";
+	MultipartConfigElement uploadConfig;
 
 	public WebService(){
 
 		cache = FeedCache.instance();
 		gson = new Gson();
+		authorizer = Authorizer.instance();
+		writer = PostWriter.instance();
+		DbFactory.instance();
+
+	    if (!upload.exists() && !upload.mkdirs()) {
+		   throw new RuntimeException("Failed to create directory " + upload.getAbsolutePath());
+	    }
+		uploadConfig = new MultipartConfigElement(upload.getAbsolutePath(),1024*1024*5, 1024*1024*5*5, 1024*1024);
 	}
+
+	private void addAuthenticatedUser(Request request, User u) {
+		request.session().attribute(USER_SESSION_ID, u);
+	}
+
+	private void removeAuthenticatedUser(Request request) {
+		request.session().removeAttribute(USER_SESSION_ID);
+	}
+
+	private User getAuthenticatedUser(Request request) {
+		return request.session().attribute(USER_SESSION_ID);
+   }
 
   public static void main(String[] args) {
 
@@ -76,7 +125,6 @@ public class WebService {
 
   private void listen(){
 
-	 //Spark.port(9998);
 	 Spark.port(Integer.valueOf(System.getenv("PORT")));
 	 Spark.staticFileLocation("/public");
 	 Spark.webSocket("/chat", WebSocketService.class);
@@ -88,6 +136,8 @@ public class WebService {
 		 return new ModelAndView(attributes, "index.ftl");
         }, new FreeMarkerEngine());
 
+
+
      Spark.get("/chat", (request, response) -> {
 		 Map<String, Object> attributes = new HashMap<>();
 		 attributes.put("message", "Hello World!");
@@ -96,108 +146,24 @@ public class WebService {
 
 	Spark.get("/ping", (request, response) -> {return new Fault("00","Ok ready.");},new JsonFront());
 
-	Spark.before("/protected/*", (request, response) -> {halt(401, "Go Away!"); });
+    Spark.post("/loader/push",(request, response) -> {
 
-    Spark.get("/api/locate/:longitude/:latitude/:range", (request, response) -> {
+		Type listType = new TypeToken<ArrayList<SearchObjectCache>>() {}.getType();
+		List<SearchObjectCache> data = gson.fromJson(request.body(), listType);
 
-		   String longitude = request.params(":longitude");
-		   String latitude = request.params(":latitude");
-		   String distance = request.params(":range");
+		System.out.println("push receives data size "+data.size());
+		Fault fault = new Fault("00","Success");
 
-		   List<String> all = new ArrayList();
-		   all.add("Festus, 200");
-		   all.add("Tolu all");
-		   response.status(200);
-		   response.type("application/json");
-		  return all;
+		if(data == null || data.size() == 0) fault = new Fault("51","No data uploaded");
+		boolean isOperationSuccessful = cache.load(data);
+		if(!isOperationSuccessful) fault = new Fault("10","Service not available. Try again");
 
-	  },new JsonFront());
+		fault.setData((Object)data);
+		fault.setGroup("feed");
+		broadcast(fault);
+		fault.setData(null);
 
-	  /*https://maps.gstatic.com/mapfiles/openhand_8_8.cur
-	  https://f.vimeocdn.com/p/2.10.5/css/player.css
-	  https://f.vimeocdn.com/p/2.10.5/js/player.js
-	  */
-
-	 Spark.get("/api/feeds", (request, response) -> {
-
-		List<Feed> feeds = cache.findAll();//new ArrayList<SearchObjectCache>();
-		if(feeds.size() == 0){
-
-			java.util.Date dd = new java.util.Date();
-			String ds = new SimpleDateFormat("EEE, dd MMM yyyy hh:mm",Locale.US).format(dd);
-			feeds.add(new Feed(new Long(1),"Any eduzi.movement",dd,"Plan your movement. ","TODO","i","","#"));
-		}
-		   response.status(200);
-		   response.type("application/json");
-		  return feeds;
-
-	  },new JsonFront());
-
-	  Spark.post("/api/location", (request, response) -> {
-
-	  		Fault fault = new Fault("00","Success");
-	  		Map<String,String> m = gson.fromJson(request.body(),Map.class);
-	  		String userid = m.get("userid");
-	  		String longitude = m.get("lon");
-	  		String latitude = m.get("lat");
-
-	  		System.out.println("updating user "+userid+" location longitude:"+longitude+",latitude:"+latitude);
-
-	  		String name = null;//"Oshodi Lagos Apapa Ikorodu Oworonsoki Ojota Ikeja Agege Ogba Somolu OjuElegba Berger Ojodu ";//"Oshodi";
-		    String type = null;//"neighborhood|political|routes|point_of_interest";
-		    String distance = "500";
-		    String s = SearchPlace.search(latitude,longitude,distance,type,name);
-		    List<Place> places = SearchPlace.parsePlaces(latitude,longitude,s);
-		    System.out.println("total Places found - "+places.size());
-
-            for(int x = 0; x < places.size(); x++){
-
-				String d = "";
-				String w = "";
-				double r = places.get(x).getDistance();
-				if(r == 0.00) continue;
-
-				if(places.get(x).getDistance() < 1){
-
-					d = String.format("%.2fm",r *1000);
-					w = String.format("%2dmins walk", SearchPlace.nextArrival(r,SearchPlace.WALK_MODE));
-
-				}else{
-
-					double t = SearchPlace.nextArrival(r,SearchPlace.DRIVE_MODE);
-					d = String.format("%.2fkm", r);
-					if(t < 1){
-						w = String.format("%.2fmins drive",t*60);
-					}else{
-						w = String.format("%.2fhrs drive", t);
-					}
-
-				}
-
-				System.out.println("You are "+String.format("%.4f",r)+" "+d+" from "+places.get(x).getName()+" "+w);
-			}
-	  	   return fault;
-
-	  },new JsonFront());
-
-	  Spark.post("/loader/push",(request, response) -> {
-
-			Type listType = new TypeToken<ArrayList<SearchObjectCache>>() {}.getType();
-			List<SearchObjectCache> data = gson.fromJson(request.body(), listType);
-
-			System.out.println("push receives data size "+data.size());
-			Fault fault = new Fault("00","Success");
-
-			if(data == null || data.size() == 0) fault = new Fault("51","No data uploaded");
-			boolean isOperationSuccessful = cache.load(data);
-			if(!isOperationSuccessful) fault = new Fault("10","Service not available. Try again");
-
-			fault.setData((Object)data);
-			fault.setGroup("feed");
-			broadcast(fault);
-			fault.setData(null);
-
-			return fault;
+		return fault;
 
 	 },new JsonFront());
 
@@ -206,87 +172,487 @@ public class WebService {
 	 });
 
 	 exception(Exception.class, (e, request, response) -> {
+
+		 e.printStackTrace();
 	     response.status(404);
 	     response.body("Resource not found");
 	 });
 
-	  /*Spark.post("/login", (request, response) -> {
-			return ConnectionSession.login(request, response);
-		} , new FreeMarkerEngine(configuration));
+	 /*
+	 * Displays the latest messages of all users.
+	 */
+	Spark.get("/public", (req, res) -> {
 
-	Spark.get("/logout", (request, response) -> {
-		ConnectionSession.logout(request, response);
-		response.redirect("/");
+		User user = getAuthenticatedUser(req);
+		Map<String, Object> map = new HashMap<>();
+		map.put("pageTitle", "Public Timeline");
+		map.put("user", user);
+		List<Message> messages = writer.findPublicTimelineMessages(user.getId());
+		map.put("messages", messages);
+		return new ModelAndView(map, "timeline.ftl");
+	 }, new FreeMarkerEngine());
+
+  /*
+  	 * Presents the login form or redirect the user to
+  	 * her timeline if it's already logged in
+  	 */
+  	Spark.get("/screen", (req, res) -> {
+
+  		Map<String, Object> map = new HashMap<>();
+  		if(req.queryParams("r") != null) {
+
+  			User user = getAuthenticatedUser(req);
+  			if(user == null){
+  				res.redirect("/");
+  			    halt();
+  			}
+  			List<Message> messages = writer.findPostForUser(user);
+  			map.put("timelines",messages);
+  			map.put("message", "You were successfully registered and can login now");
+  			map.put("email", user.getEmail());
+  			map.put("user", user);
+
+  		}else{
+
+  			res.redirect("/");
+  			halt();
+  		}
+        return new ModelAndView(map, "screen.ftl");
+  	 }, new FreeMarkerEngine());
+  	/*
+  	 * Logs the user in.
+  	 */
+  	Spark.post("/login", (req, res) -> {
+
+  		Map<String, Object> map = new HashMap<>();
+  		User user = new User();
+  		try {
+
+  			MultiMap<String> params = new MultiMap<String>();
+  			UrlEncoded.decodeTo(req.body(), params, "UTF-8");
+  			BeanUtils.populate(user, params);
+
+  		} catch (Exception e) {
+  			halt(501);
+  			return null;
+  		}
+
+  		Fault fault = authorizer.checkUser(user);
+  		String page = "";
+  		if(fault.getData() != null) {
+
+  			addAuthenticatedUser(req, (User)fault.getData());
+  			res.redirect("/screen?r=1");
+
+  		} else {
+
+  			map.put("error", fault.getError());
+  			map.put("email", user.getEmail());
+  		    page = "index.ftl";
+  		}
+
+          return new ModelAndView(map,page);
+  	 }, new FreeMarkerEngine());
+
+  	/*
+  	 * Presents the register form or redirect the user to
+  	 * her timeline if it's already logged in
+  	 */
+  	Spark.get("/register", (req, res) -> {
+  		Map<String, Object> map = new HashMap<>();
+  		return new ModelAndView(map, "index.ftl");
+  	 }, new FreeMarkerEngine());
+  	/*
+  	 * Registers the user.
+  	 */
+  	Spark.post("/register", (req, res) -> {
+
+  		Map<String, Object> map = new HashMap<>();
+  		User user = new User();
+  		String page = "index.ftl";
+
+  		try {
+
+  			MultiMap<String> params = new MultiMap<String>();
+  			UrlEncoded.decodeTo(req.body(), params, "UTF-8");
+  			BeanUtils.populate(user, params);
+
+  			String error = user.validate();
+  			if(StringUtils.isEmpty(error)) {
+
+  				User existingUser = authorizer.findByUserName(user.getEmail());
+  				if(existingUser == null) {
+
+  					System.out.println("persisting new user to db");
+  					user.setPassword(PasswordUtil.hashPassword(user.getPassword()));
+  					authorizer.save(user);
+  					page = "screen.ftl";
+
+  				} else {
+
+  					error = "The username is already taken";
+  					page = "index.ftl";
+  				}
+  			}
+
+  			map.put("createError", error);
+  			map.put("name", user.getName());
+  		    map.put("email", user.getEmail());
+
+  		} catch (Exception e) {
+
+  			e.printStackTrace();
+  			halt(501);
+  			return null;
+  		}
+
+  		return new ModelAndView(map,page);
+  	 }, new FreeMarkerEngine());
+  	/*
+  	 * Checks if the user is already authenticated
+  	 */
+  	Spark.before("/register", (req, res) -> {
+  		User authUser = getAuthenticatedUser(req);
+  		if(authUser != null) {
+  			res.redirect("/screen?r="+PasswordUtil.hashPassword("1"));
+  			halt();
+  		}
+  	});
+
+  	/*
+  	 * Logs the user out and redirects to the public timeline
+  	 */
+  	Spark.get("/logout", (req, res) -> {
+  		removeAuthenticatedUser(req);
+  		res.redirect("/public");
+  		return null;
+  	 });
+
+	/*
+	 * Displays a user's tweets.
+	 */
+	Spark.get("/api/move/message/:username", (req, res) -> {
+
+		String username = req.params(":username");
+		User profileUser = authorizer.findByUserName(username);
+
+		User authUser = getAuthenticatedUser(req);
+		boolean followed = false;
+		if(authUser != null) {
+			followed = authorizer.isFollowing(authUser.getId(), profileUser.getId());
+		}
+
+		List<Message> messages = writer.findPostForUser(profileUser);
+		Map<String, Object> map = new HashMap<>();
+		map.put("pageTitle", username + "'s Timeline");
+		map.put("user", authUser);
+		map.put("profileUser", profileUser);
+		map.put("followed", followed);
+		map.put("timelines", messages);
+		return new ModelAndView(map, "timeline.ftl");
+	 }, new FreeMarkerEngine());
+	/*
+	 * Checks if the user exists
+	 */
+	Spark.before("/api/move/user/:username", (req, res) -> {
+
+		String username = req.params(":username");
+		User profileUser = authorizer.findByUserName(username);
+		if(profileUser == null) {
+			halt(404, "User not Found");
+		}
+	});
+
+
+	/*
+	 * Adds the current user as follower of the given user.
+	 */
+	Spark.get("/api/move/user/follow/:username", (req, res) -> {
+
+		String username = req.params(":username");
+		User profileUser = authorizer.findByUserName(username);
+		User authUser = getAuthenticatedUser(req);
+
+		authorizer.follow(authUser.getId(), profileUser.getId());
+		res.redirect("/api/move/user/" + username);
 		return null;
+	 });
+	/*
+	 * Checks if the user is authenticated and the user to follow exists
+	 */
+	Spark.before("/api/move/user/:username/follow", (req, res) -> {
+		String username = req.params(":username");
+		User authUser = getAuthenticatedUser(req);
+		User profileUser = authorizer.findByUserName(username);
+		if(authUser == null) {
+			res.redirect("/");
+			halt();
+		} else if(profileUser == null) {
+			halt(404, "User not Found");
+		}
 	});
-	Spark.post("/obliterate/purge", (request, response) -> {
-			return DepotControl.postObliteratePurge(request, response);
-		} , JsonUtil.json());
 
-		Spark.post("/deploy/:type", (request, response) -> {
-			return DeployControl.postDeploy(request, response);
-		});
 
-		Spark.get("/submit/:type", (request, response) -> {
-			return DeployControl.getSubmit(request, response);
-		} , new FreeMarkerEngine(configuration));
+	/*
+	 * Removes the current user as follower of the given user.
+	 */
+	Spark.get("/api/move/user/:username/unfollow", (req, res) -> {
+		String username = req.params(":username");
+		User profileUser = authorizer.findByUserName(username);
+		User authUser = getAuthenticatedUser(req);
 
-		Spark.post("/submit/:type", (request, response) -> {
-			return DeployControl.postSubmit(request, response);
+		authorizer.unfollow(authUser.getId(), profileUser.getId());
+		res.redirect("/api/move/user/" + username);
+		return null;
+	 });
+	/*
+	 * Checks if the user is authenticated and the user to unfollow exists
+	 */
+	Spark.before("/api/move/user/:username/unfollow", (req, res) -> {
+
+		String username = req.params(":username");
+		User authUser = getAuthenticatedUser(req);
+		User profileUser = authorizer.findByUserName(username);
+		if(authUser == null) {
+			res.redirect("/");
+			halt();
+		} else if(profileUser == null) {
+			halt(404, "User not Found");
+		}
 	});
 
-    /*
-	 get("/users/:id", (req, res) -> {
+	/*
+	 * comments on a given message by a given user.
+	 */
+	Spark.post("/api/move/message/comment/:username/:id", (req, res) -> {
 
-	   String id = req.params(":id");
-	   User user = userService.getUser(id);
-	   if (user != null) {
+		String username = req.params(":username");
+		String messageid = req.params(":id");
+		User profileUser = authorizer.findByUserName(username);
+		User authUser = getAuthenticatedUser(req);
 
-		 response.status(200);
-	     response.type("application/json");
-		 return dataToJson(all);
+		Comment comment = new Comment();
+		MultiMap<String> params = new MultiMap<String>();
+		UrlEncoded.decodeTo(req.body(), params, "UTF-8");
+  		BeanUtils.populate(comment, params);
+
+		writer.comment(messageid,comment, profileUser.getId());
+		res.redirect("/screen?r=" + username);
+		return null;
+
+	 });
+
+	/*
+	 * uncomments on a given message by a given user.
+	 */
+	Spark.get("/api/move/message/uncomment/:username/:id", (req, res) -> {
+
+		String username = req.params(":username");
+		String commentid = req.params(":id");
+		User profileUser = authorizer.findByUserName(username);
+		User authUser = getAuthenticatedUser(req);
+
+		writer.uncomment(commentid);
+		res.redirect("/screen?r=" + username);
+		return null;
+
+	 });
+
+	/*
+	 * attedn the current event by given user.
+	 */
+	Spark.get("/api/move/message/attend/:username/:id", (req, res) -> {
+
+		String username = req.params(":username");
+		String messageid = req.params(":id");
+
+		User profileUser = authorizer.findByUserName(username);
+		User authUser = getAuthenticatedUser(req);
+
+		writer.attend(messageid, profileUser.getId());
+		res.redirect("/screen?r=" + username);
+		return null;
+	 });
+
+
+	/*
+	 * updates the current message by the given user.
+	 */
+	Spark.get("/api/move/message/edit/:username/:id", (req, res) -> {
+
+		String username = req.params(":username");
+		User profileUser = authorizer.findByUserName(username);
+		User authUser = getAuthenticatedUser(req);
+
+		authorizer.unfollow(authUser.getId(), profileUser.getId());
+		res.redirect("/screen?r=" + username);
+		return null;
+	 });
+
+
+	/*
+	 * Removes the current message by the given user.
+	 */
+	Spark.get("/api/move/message/delete/:username/:id", (req, res) -> {
+		String username = req.params(":username");
+		User profileUser = authorizer.findByUserName(username);
+		User authUser = getAuthenticatedUser(req);
+
+		authorizer.unfollow(authUser.getId(), profileUser.getId());
+		res.redirect("/screen?r=" + username);
+		return null;
+	 });
+
+	/*
+	 * posts a new message for the user.
+	 */
+	Spark.post("/api/move/message/new/:username", (req, res) -> {
+
+	   String photo = null;
+	   try{
+
+			req.raw().setAttribute("org.eclipse.jetty.multipartConfig", uploadConfig);
+			Part uploaded = req.raw().getPart("file"); //file is name of the upload form
+			photo = FileUtil.nextText()+"."+FileUtil.extension(FileUtil.name(uploaded));
+			InputStream in = uploaded.getInputStream();
+			Files.copy(in,new File(upload.getAbsolutePath()+File.separator+photo).toPath());
+
+	   }catch(javax.servlet.ServletException s){
+
+	   }catch(java.io.IOException e){
+		   e.printStackTrace();
 	   }
 
-	   response.status(400);
-	   response.type("application/json");
-	   return dataToJson(new String("{error:\"No user with id "+id+" found\"}"));
+		//User user = getAuthenticatedUser(req);
+		String email = req.params(":username");
+		User user = authorizer.findByUserName(email);
 
-	 }, json());
+		String title = req.raw().getParameter("title");
+		String type = req.raw().getParameter("type");
+		String text = req.raw().getParameter("text");
+		String place = req.raw().getParameter("place");
+		String date = req.raw().getParameter("date");
+		String time = req.raw().getParameter("time");
+		String profile = req.raw().getParameter("profile");
+		if((profile != null) && (profile.equals("Y")) && (photo != null)){
 
-	 //updating user
-	/* Spark.put("/users/:id", (req, res) -> userService.updateUser(
-		 req.params(":id"),
-		 req.queryParams("name"),
-		 req.queryParams("email")
-	  ), json());
-
-
-	  Spark.get("/db", (req, res) -> {
-		Connection connection = null;
-		Map<String, Object> attributes = new HashMap<>();
-		try {
-
-		  connection = DatabaseUrl.extract().getConnection();
-		  Statement stmt = connection.createStatement();
-		  stmt.executeUpdate("CREATE TABLE IF NOT EXISTS ticks (tick timestamp)");
-		  stmt.executeUpdate("INSERT INTO ticks VALUES (now())");
-		  ResultSet rs = stmt.executeQuery("SELECT tick FROM ticks");
-
-		  ArrayList<String> output = new ArrayList<String>();
-		  while (rs.next()) {
-			output.add( "Read from DB: " + rs.getTimestamp("tick"));
-		  }
-
-		  attributes.put("results", output);
-		  return new ModelAndView(attributes, "db.ftl");
-
-		} catch (Exception e) {
-			 attributes.put("message", "There was an error: " + e);
-			return new ModelAndView(attributes, "error.ftl");
-		} finally {
-		  if (connection != null) try{connection.close();} catch(SQLException e){}
+			user.setPic(photo);
+			authorizer.save(user);
 		}
-	  }, new FreeMarkerEngine());*/
+
+		Fault fault = new Fault("00","Success");
+		Message m = new Message();
+		m.setPublished(new java.util.Date());
+
+		m.setAuthor(user);
+		m.setPhoto(photo);
+		m.setType(type);
+		m.setTitle(title);
+		m.setText(text);
+		m.setPlace(place);
+		m.setTime(time);
+		writer.write(m);
+
+		res.status(200);
+		res.redirect("/screen?r=");
+           // return "OK";
+		//res.type("application/json");
+		return fault;
+
+  },new JsonFront());
+
+  Spark.get("/api/move/photo/:id", (request, response) -> {
+
+  	   String fileName = request.params(":id");
+  	   byte[] photo = FileUtil.loadFromDisk("upload"+File.separator+fileName);
+
+  	   response.type("image/png");
+  	   //response.body(data);
+	   ServletOutputStream os = response.raw().getOutputStream();
+	   os.write(photo);
+	   os.flush();
+
+  	   response.status(200);
+  	  return "";
+
+  });//,new JsonFront());
+
+  Spark.get("/api/move/locate/:longitude/:latitude/:range", (request, response) -> {
+
+	   String longitude = request.params(":longitude");
+	   String latitude = request.params(":latitude");
+	   String distance = request.params(":range");
+
+	   List<String> all = new ArrayList();
+	   all.add("Festus, 200");
+	   all.add("Tolu all");
+	   response.status(200);
+	   response.type("application/json");
+	  return all;
+
+  },new JsonFront());
+
+  	 Spark.get("/api/move/feeds", (request, response) -> {
+
+  		List<Feed> feeds = cache.findAll();//new ArrayList<SearchObjectCache>();
+  		if(feeds.size() == 0){
+
+  			java.util.Date dd = new java.util.Date();
+  			String ds = new SimpleDateFormat("EEE, dd MMM yyyy hh:mm",Locale.US).format(dd);
+  			feeds.add(new Feed(new Long(1),"Any eduzi.movement",dd,"Learn. Anticipate. Move ","TODO","i","","#"));
+  		}
+  		   response.status(200);
+  		   response.type("application/json");
+  		  return feeds;
+
+  	  },new JsonFront());
+
+  	  Spark.post("/api/move/location", (request, response) -> {
+
+		Fault fault = new Fault("00","Success");
+		Map<String,String> m = gson.fromJson(request.body(),Map.class);
+		String userid = m.get("userid");
+		String longitude = m.get("lon");
+		String latitude = m.get("lat");
+
+		System.out.println("updating user "+userid+" location longitude:"+longitude+",latitude:"+latitude);
+
+		String name = null;//"Oshodi Lagos Apapa Ikorodu Oworonsoki Ojota Ikeja Agege Ogba Somolu OjuElegba Berger Ojodu ";//"Oshodi";
+		String type = null;//"neighborhood|political|routes|point_of_interest";
+		String distance = "500";
+		String s = SearchPlace.search(latitude,longitude,distance,type,name);
+		List<Place> places = SearchPlace.parsePlaces(latitude,longitude,s);
+		System.out.println("total Places found - "+places.size());
+
+		  for(int x = 0; x < places.size(); x++){
+
+			String d = "";
+			String w = "";
+			double r = places.get(x).getDistance();
+			if(r == 0.00) continue;
+
+			if(places.get(x).getDistance() < 1){
+
+				d = String.format("%.2fm",r *1000);
+				w = String.format("%2dmins walk", SearchPlace.nextArrival(r,SearchPlace.WALK_MODE));
+
+			}else{
+
+				double t = SearchPlace.nextArrival(r,SearchPlace.DRIVE_MODE);
+				d = String.format("%.2fkm", r);
+				if(t < 1){
+					w = String.format("%.2fmins drive",t*60);
+				}else{
+					w = String.format("%.2fhrs drive", t);
+				}
+			}
+
+			System.out.println("You are "+String.format("%.4f",r)+" "+d+" from "+places.get(x).getName()+" "+w);
+		}
+	   return fault;
+
+  },new JsonFront());
 
   }
+
 }

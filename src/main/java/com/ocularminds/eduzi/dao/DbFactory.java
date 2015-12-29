@@ -1,6 +1,9 @@
 package com.ocularminds.eduzi.dao;
 
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import java.net.URI;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -13,54 +16,49 @@ public class DbFactory {
 
   private static final String PERSISTENCE_UNIT_NAME = "EduziPU";
   private static EntityManagerFactory factory;
+  public static DbFactory instance;
 
-  public static DbFactory newInstance() {
+  public static DbFactory instance() {
 
-	  return null;
+	  if(instance == null){
+		  instance = new DbFactory();
+	  }
 
-   /* factory = Persistence.createEntityManagerFactory(PERSISTENCE_UNIT_NAME);
-    EntityManager em = factory.createEntityManager();
-    Query q = em.createQuery("select t from Todo t");
-    List<Todo> todoList = q.getResultList();
-    for (Todo todo : todoList) {
-      System.out.println(todo);
-    }
-    System.out.println("Size: " + todoList.size());
-
-    // Create new todo
-    em.getTransaction().begin();
-    Todo todo = new Todo();
-    todo.setSummary("This is a test");
-    todo.setDescription("This is a test");
-    em.persist(todo);
-    em.getTransaction().commit();
-
-    em.close();
+	  return instance;
   }
 
+  private DbFactory(){
 
+	  Map<String, String> persistenceMap = new HashMap<String, String>();
 
-  	try {
-  		  em.getTransaction().begin();
-  		  // Operations that modify the database should come here.
-  		  em.getTransaction().commit();
-  	  }
-  	  finally {
-  		  if (em.getTransaction().isActive())
-  			  em.getTransaction().rollback();
-	}
+	  try{
 
+	      System.out.println("loading database properties");
 
-  	/**
-  	Properties props = new Properties();
-  	props.setProperty("dataSourceClassName", "org.postgresql.ds.PGSimpleDataSource");
-  	props.setProperty("dataSource.user", "test");
-  	props.setProperty("dataSource.password", "test");
-  	props.setProperty("dataSource.databaseName", "mydb");
-  	props.put("dataSource.logWriter", new PrintWriter(System.out));
+	      URI dbUri = new URI(System.getenv("DATABASE_URL"));
+		  String dbuser = dbUri.getUserInfo().split(":")[0];
+		  String dbpass = dbUri.getUserInfo().split(":")[1];
+		  String dburl = "jdbc:postgresql://" + dbUri.getHost() + ':' + dbUri.getPort() + dbUri.getPath();
 
-  	HikariConfig config = new HikariConfig(props);
-      HikariDataSource ds = new HikariDataSource(config);
-    */
-}
+		  persistenceMap.put("javax.persistence.jdbc.url",dburl);
+		  persistenceMap.put("javax.persistence.jdbc.user",dbuser);
+		  persistenceMap.put("javax.persistence.jdbc.password",dbpass);
+		  //persistenceMap.put("javax.persistence.jdbc.driver", "<driver>");
+		  factory = Persistence.createEntityManagerFactory(DbFactory.PERSISTENCE_UNIT_NAME, persistenceMap);
+		  System.out.println("factory created "+factory);
+
+	  }catch(Exception e){
+		  e.printStackTrace();
+	  }
+  }
+
+  public EntityManager getConnection(){
+	  return factory.createEntityManager();
+  }
+
+  public void close(EntityManager em){
+	  if(em != null){
+		  em.close();
+	  }
+  }
 }

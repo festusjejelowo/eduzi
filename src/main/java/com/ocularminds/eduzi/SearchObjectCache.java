@@ -10,6 +10,7 @@ public class SearchObjectCache implements java.io.Serializable{
   String category;
   private String title;
   String text;
+  String location;
   private Date date;
 
   public SearchObjectCache(){
@@ -23,6 +24,16 @@ public class SearchObjectCache implements java.io.Serializable{
   	this.category = category;
   	this.text = text;
   	this.date = date;
+  }
+
+   public SearchObjectCache(int id,String url,String category,String text,Date date,String location){
+
+	this.id = id;
+	this.url = url;
+	this.category = category;
+	this.text = text;
+	this.date = date;
+	this.location = location;
   }
 
   public void setId(int id){
@@ -63,6 +74,14 @@ public class SearchObjectCache implements java.io.Serializable{
 
   public String getTitle(){
 	  return this.title;
+  }
+
+  public void setLocation(String location){
+	  this.location = location;
+  }
+
+  public String getLocation(){
+	  return this.location;
   }
 
   public void setDate(Date date){

@@ -2,10 +2,21 @@ package com.ocularminds.eduzi.util;
 
 public class TextUtil {
 
-public static boolean isSimilar(String s1,String s2){
-  return similarity(s1,s2) > 6.9;
-}
+	public static String format(String text,int size){
 
+		if(text.length() > size) return text.substring(0,size);
+		StringBuffer sb = new StringBuffer(text);
+
+		for(int x = 0; x < (size - text.length()); x++){
+			sb.append(" ");
+		}
+
+		return sb.toString();
+	}
+
+	public static boolean isSimilar(String s1,String s2){
+	  return similarity(s1,s2) > 6.9;
+	}
   /**
    * Calculates the similarity (a number within 0 and 1) between two strings.
    */

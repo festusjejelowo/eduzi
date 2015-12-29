@@ -8,6 +8,8 @@ public class Place implements Serializable,Comparable<Place>{
    private double longitude;
    private double latitude;
    private double distance;
+   private String travel;
+   private String time;
 
    public Place(){}
 
