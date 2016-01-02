@@ -19,7 +19,7 @@
       <p>${timeline.title}</p>      
       <div class="timeline-added-images">
         <#list timeline.photos as photo>
-	   <img src="/api/move/picture/${photo.link}" width="80" alt="photo">
+	   <img src="/api/move/photo/${photo.link}" width="80" alt="photo">
 	</#list>
       </div>
     </div>

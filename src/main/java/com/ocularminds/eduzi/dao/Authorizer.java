@@ -135,6 +135,8 @@ public class Authorizer{
 		 user.setName(usr.getName());
 		 user.setPassword(usr.getPassword());
 		 user.setPic(usr.getPic());
+		 user.setAvatar(usr.getAvatar());
+		 user.setCoverImage(usr.getCoverImage());
 
 		 if((usr.getId() == null) || (usr.getId().longValue() == 0)) {
 			 em.persist(user);

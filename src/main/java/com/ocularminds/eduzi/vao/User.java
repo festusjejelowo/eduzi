@@ -57,6 +57,12 @@ public class User implements java.io.Serializable{
 	@Column(name="pic", length=55, nullable=true)
     private String pic;
 
+    @Column(name="avatar", length=55, nullable=true)
+    private String avatar;
+
+    @Column(name="coverImage", length=55, nullable=true)
+    private String coverImage;
+
     @ManyToMany(cascade = CascadeType.ALL)
 	@JoinTable(name = "edz_follow",joinColumns = @JoinColumn(name = "followed_id"),inverseJoinColumns = @JoinColumn(name = "follower_id"))
     private Set<User> followers;
@@ -127,6 +133,22 @@ public class User implements java.io.Serializable{
 
     public void setPic(String pic) {
         this.pic = pic;
+    }
+
+    public String getAvatar() {
+        return avatar;
+    }
+
+    public void setAvatar(String avatar) {
+        this.avatar = avatar;
+    }
+
+    public String getCoverImage() {
+        return coverImage;
+    }
+
+    public void setCoverImage(String coverImage) {
+        this.coverImage = coverImage;
     }
 
     public String getCaption() {

@@ -34,6 +34,7 @@ import com.ocularminds.eduzi.vao.Feed;
 import com.ocularminds.eduzi.util.FeedCache;
 import com.ocularminds.eduzi.util.DateUtil;
 import com.ocularminds.eduzi.util.FileUtil;
+import com.ocularminds.eduzi.util.ImageUtil;
 import com.ocularminds.eduzi.util.PasswordUtil;
 import com.ocularminds.eduzi.vao.Place;
 import com.ocularminds.eduzi.vao.User;
@@ -64,7 +65,7 @@ public class WebService {
 	PostWriter writer;
 
 	final File upload = new File("upload");
-	private static final String USER_SESSION_ID = "user";
+	private static final String USER_SESSION_ID = "USER_SESSION_ID";
 	MultipartConfigElement uploadConfig;
 
 	public WebService(){
@@ -219,6 +220,7 @@ public class WebService {
   			map.put("message",message);
   			map.put("email", user.getEmail());
   			map.put("user", user);
+  			map.put("username",user.getName().split("\\s+")[0]);
 
   		}else{
 
@@ -292,7 +294,6 @@ public class WebService {
   				User existingUser = authorizer.findByUserName(user.getEmail());
   				if(existingUser == null) {
 
-  					System.out.println("persisting new user to db");
   					user.setPassword(PasswordUtil.hashPassword(user.getPassword()));
   					authorizer.save(user);
   					page = "screen.ftl";
@@ -309,6 +310,7 @@ public class WebService {
 					map.put("message",message);
 					map.put("email", user.getEmail());
   			        map.put("user", user);
+  			        map.put("username",user.getName().split("\\s+")[0]);
 
   				} else {
 
@@ -530,12 +532,18 @@ public class WebService {
 	 */
 	Spark.post("/api/move/message/new/:username", (req, res) -> {
 
+	   String image = null;
+	   String ext = null;
+	   String dir = null;
 	   String photo = null;
 	   try{
 
 			req.raw().setAttribute("org.eclipse.jetty.multipartConfig", uploadConfig);
 			Part uploaded = req.raw().getPart("file"); //file is name of the upload form
-			photo = FileUtil.nextText()+"."+FileUtil.extension(FileUtil.name(uploaded));
+			ext = FileUtil.extension(FileUtil.name(uploaded));
+			image = FileUtil.nextText();
+			photo = image+"."+ext;
+			dir = upload.getAbsolutePath();
 			InputStream in = uploaded.getInputStream();
 			Files.copy(in,new File(upload.getAbsolutePath()+File.separator+photo).toPath());
 
@@ -555,10 +563,21 @@ public class WebService {
 		String place = req.raw().getParameter("place");
 		String date = req.raw().getParameter("date");
 		String time = req.raw().getParameter("time");
-		String profile = req.raw().getParameter("profile");
-		if((profile != null) && (profile.equals("Y")) && (photo != null)){
+		String imageFor = req.raw().getParameter("image_for");
+		if((imageFor != null) && (imageFor.equals("profile")) && (photo != null)){
 
-			user.setPic(photo);
+			String pic = image+"50."+ext;
+			String avatar = image+"110."+ext;
+			ImageUtil.scale(dir+File.separator+photo,dir+File.separator+avatar,ImageUtil.AVATAR_WIDTH,ImageUtil.AVATAR_HEIGHT,ext);
+			ImageUtil.scale(dir+File.separator+photo,dir+File.separator+pic,ImageUtil.AVATAR_SMALL_WIDTH,ImageUtil.AVATAR_SMALL_HEIGHT,ext);
+
+			user.setPic(pic);
+			user.setAvatar(avatar);
+			authorizer.save(user);
+
+		}else if((imageFor != null) && (imageFor.equals("cover")) && (photo != null)){
+
+			user.setCoverImage(photo);
 			authorizer.save(user);
 		}
 
@@ -577,8 +596,6 @@ public class WebService {
 
 		res.status(200);
 		res.redirect("/screen?r=");
-           // return "OK";
-		//res.type("application/json");
 		return fault;
 
   },new JsonFront());

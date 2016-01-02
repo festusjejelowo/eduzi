@@ -40,7 +40,7 @@
                                 </div>
                                 <div class="cover-info">
                                     <div class="avatar">
-                                        <img src="images/guy-5.jpg" alt="Change picture" data-toggle="modal" data-target="#photo_window">
+                                        <img src="/api/move/photo/${user.avatar!"avatar.png"}" alt="Change picture" data-toggle="modal" data-target="#photo_window">
                                     </div>
                                     <ul class="cover-nav">
                                         <li><a href="user-public-timeline.html"><i class="fa fa-fw icon-ship-wheel"></i> Timeline</a></li>
@@ -90,7 +90,7 @@
                                                         </ul>
                                                         <ul class="img-grid">
                                                             <#list timeline.attendees as attendee>
-                                                                <li><a href="#"><img src="images/guy-6.jpg" alt="people" class="img-responsive"></a>
+                                                                <li><a href="#"><img src="/api/move/photo/${attendee.pic}" alt="people" class="img-responsive"></a>
                                                                 </li>
                                                             </#list>
                                                         </ul>

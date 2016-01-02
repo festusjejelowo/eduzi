@@ -22,15 +22,19 @@
                     </div>
                  </div>
                  <div class="row">
-		    <div class="col-md-2 col-md-offset-3">Mark As:</div>
-		    <div class="col-md-7">
+		    <div class="col-md-3 col-md-offset-3">Mark Picture As:</div>
+		    <div class="col-md-6">
 			   <div class="radio radio-inline radio-circle radio-warning">
-				<input type="radio" name="profile" value="N" checked="true" id="agree1">
-				<label for="agree1">Upload</label>
+				<input type="radio" name="image_for" value="image" checked="true" id="image_for_1">
+				<label for="image_for_1">Normal</label>
 			   </div>
 			  <div class="radio radio-inline radio-circle radio-success">
-				<input type="radio" name="profile" value="Y" id="agree2">
-				<label for="agree2">Profile Picture</label>
+				<input type="radio" name="image_for" value="profile" id="image_for_2">
+				<label for="image_for_2">Profile</label>
+			  </div>			  
+			  <div class="radio radio-inline radio-circle radio-success">
+				<input type="radio" name="image_for" value="cover" id="image_for_3">
+				<label for="image_for_3">Cover</label>
 			  </div>
 		     </div>
                  </div>
