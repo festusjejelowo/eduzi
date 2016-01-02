@@ -296,6 +296,19 @@ public class WebService {
   					user.setPassword(PasswordUtil.hashPassword(user.getPassword()));
   					authorizer.save(user);
   					page = "screen.ftl";
+  					user = authorizer.findByUserName(user.getEmail());
+  					map.put("user",user);
+  					List<Message> messages = writer.findPostForUser(user);
+					Message message = new Message();
+					message.setTitle("Good "+DateUtil.timeOfDay()+", "+user.getName().split("\\s+")[0]);
+					message.setTime(DateUtil.tommorow());
+					message.setType(SearchPlace.nextWeather("Lagos,NG"));
+					message.setText("7.50 and 8.00");
+					message.setPlace("Ikeja-Maryland");
+					map.put("timelines",messages);
+					map.put("message",message);
+					map.put("email", user.getEmail());
+  			        map.put("user", user);
 
   				} else {
 

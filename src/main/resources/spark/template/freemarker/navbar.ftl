@@ -36,7 +36,7 @@
                         </li>
                         <li class="dropdown">
                             <a href="#" class="dropdown-toggle user" data-toggle="dropdown">
-                                <img src="images/guy-5.jpg" alt="${user.email}" class="img-circle" width="40">${user.email}<span class="caret"></span>
+                                <img src="images/guy-5.jpg" alt="${user.name}" class="img-circle" width="40">${user.name}<span class="caret"></span>
                             </a>
                             <ul class="dropdown-menu" role="menu">
                                 <li><a href="user-private-profile.html">Profile</a>
