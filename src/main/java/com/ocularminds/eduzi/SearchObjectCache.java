@@ -1,38 +1,42 @@
 package com.ocularminds.eduzi;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import com.ocularminds.eduzi.util.TextUtil;
 
 public class SearchObjectCache implements java.io.Serializable{
 
   private int id;
   private String url;
-  String category;
+  private String category;
   private String title;
-  String text;
-  String location;
-  private Date date;
+  private String text;
+  private String location;
+  private String day;
+  private String time;
+  private LocalDateTime date;
 
   public SearchObjectCache(){
-    date = new Date();
+
+     date = LocalDateTime.now();
+     setDate(date);
   }
 
-  public SearchObjectCache(int id,String url,String category,String text,Date date){
+  public SearchObjectCache(int id,String url,String category,String text,LocalDateTime date){
 
   	this.id = id;
   	this.url = url;
   	this.category = category;
   	this.text = text;
-  	this.date = date;
+  	setDate(date);
   }
 
-   public SearchObjectCache(int id,String url,String category,String text,Date date,String location){
+   public SearchObjectCache(int id,String url,String category,String text,LocalDateTime date,String location){
 
 	this.id = id;
 	this.url = url;
 	this.category = category;
 	this.text = text;
-	this.date = date;
+	setDate(date);
 	this.location = location;
   }
 
@@ -84,11 +88,31 @@ public class SearchObjectCache implements java.io.Serializable{
 	  return this.location;
   }
 
-  public void setDate(Date date){
-	  this.date = date;
+  public void setDay(String day){
+	  this.day = day;
   }
 
-  public Date getDate(){
+  public String getDay(){
+	  return this.day;
+  }
+
+  public void setTime(String time){
+	  this.time = time;
+  }
+
+  public String getTime(){
+	  return this.time;
+  }
+
+  public void setDate(LocalDateTime date){
+
+	  if(date == null) date = LocalDateTime.now();
+	  this.date = date.plusDays((int)(Math.random()*7));
+	  this.day = this.date.getDayOfWeek().toString();
+	  this.time = date.toLocalTime().toString().replace(":",".");
+  }
+
+  public LocalDateTime getDate(){
 	  return this.date;
   }
 

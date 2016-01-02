@@ -24,14 +24,12 @@ public class EventSearchJob implements Job{
 	"http://www.channelstv.com/category/local/ "+
 	"http://www.vanguardngr.com/ "+
 	"http://www.punchng.com "+
-	"http://www.tsaboin.com "+
-	"http://www.beattraffik.com/ "+
 	"http://www.nairaland.com/crime "+
-	"http://www.nairaland.com/recent ";
+	"http://www.nairaland.com/recent "+
+	"http://trafficchiefng.com/emergencyAlerts_page.php?query=Enter%20a%20Keyword&type=all&state=all&status=Active";
 
 	final String attributes = "Robbery,Hijack,Flood,Disaster,Rape,Crush,Suspect,Fraud,"+
-					"Illegal,Forge,crime,kill,Attack,Traffic,Slow,Blocked,"+
-					"Moving,Accident,Murder,Hold up,Downpour,Fire";
+					"Illegal,Forge,crime,kill,Attack,Blocked,Accident,Murder,Fire";
 
    public void execute(JobExecutionContext context) throws JobExecutionException{
 

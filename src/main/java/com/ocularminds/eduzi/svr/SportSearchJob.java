@@ -14,24 +14,13 @@ public class SportSearchJob implements Job{
 
 	// tweeter@gidi traffik
 	final String DATASOURCE = "http://www.vanguardngr.com/"+new java.text.SimpleDateFormat("yyy/MM/dd").format(new java.util.Date())+"/ "+
-	"http://www.thisdaylive.com/news/ "+
-	"http://sunnewsonline.com/new/ "+
-	"https://www.facebook.com "+
-	"https://twitter.com/search?q=traffic%20nigeria&src=typd "+
-	"https://twitter.com/Gidi_Traffic "+
-	"http://www.lindaikejisblog.com/ "+
-	"http://www.channelstv.com/ "+
-	"http://www.channelstv.com/category/local/ "+
-	"http://www.vanguardngr.com/ "+
-	"http://www.punchng.com "+
-	"http://www.tsaboin.com "+
-	"http://www.beattraffik.com/ "+
-	"http://www.nairaland.com/crime "+
-	"http://www.nairaland.com/recent ";
+	"http://www.completesportsnigeria.com/ "+
+	"http://www.newsnow.co.uk/h/World+News/Africa/Nigeria/Sport "+
+	"http://www.latestnigeriannews.com/latest-news/sports/ "+
+	"http://www.allnigeriasoccer.com/ "+
+	"http://www.fourfourtwo.com/nigeria ";
 
-	final String attributes = "Robbery,Hijack,Flood,Disaster,Rape,Crush,Suspect,Fraud,"+
-						"Illegal,Forge,crime,kill,Attack,Traffic,Slow,Blocked,"+
-					"Moving,Accident,Murder,Hold up,Downpour,Fire";
+	final String attributes = "Match,game,win,lost,away,home,goalles draw,triumph,defeat";
 
    public void execute(JobExecutionContext context) throws JobExecutionException{
 

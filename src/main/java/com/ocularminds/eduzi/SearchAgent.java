@@ -31,6 +31,7 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.ArrayList;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 
 import com.jaunt.UserAgent;
 import com.jaunt.Element;
@@ -46,6 +47,8 @@ import java.util.concurrent.Future;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import com.ocularminds.eduzi.util.DateUtil;
 
 public class SearchAgent implements Callable<List<SearchObjectCache>> {
 
@@ -167,36 +170,78 @@ public class SearchAgent implements Callable<List<SearchObjectCache>> {
 
           HandlerForBinary handlerForBinary = new HandlerForBinary();
 		  UserAgent userAgent = new UserAgent();
+
+		  if(source.contains("https")){
+
+			  System.out.println("setting http proxy for secure site "+source);
+			  System.setProperty("https.proxyHost", "199.16.156.38");
+              System.setProperty("https.proxyPort", "443");
+		  }
 		  userAgent.sendHEAD(source);
 		  String date = userAgent.response.getHeader("last-modified");
 		  if(date == null) date = userAgent.response.getHeader("date");
 		  userAgent.visit(source);
 
-		  SimpleDateFormat sdf = new SimpleDateFormat("EEE, dd MMM yyyy hh:mm:ss Z",Locale.US);
+		  String datePattern = "EEE, dd MMM yyyy hh:mm:ss z";
 
 		  for(String text: Arrays.asList(attributes.split(","))){
 
 			 //find every element who's tagname is div,span,p,li,a,h3,b,i.
-			Elements elements = userAgent.doc.findEvery("<li|div|span|p|abbr|a|h3|b|i|>"+text+"|"+text.toLowerCase());
+			Elements elements = null;
+			if(source.contains("beattraffik")){
+			     elements = userAgent.doc.findEach("<li>");//+text+"|"+text.toLowerCase());
+			 }else{
+				 elements = userAgent.doc.findEvery("<li|div|span|p|abbr|a|h3|b|i|>"+text+"|"+text.toLowerCase());
+			 }
 			for(Element ol : elements){
 
 				String d = Long.toString(System.currentTimeMillis());
 				int id = Integer.parseInt(d.substring(d.length()-6,d.length()));
-			  //removes white spaces .replaceAll("\\s+", " ").
-			  if(ol.innerText().trim().length() > 7) {
+				String report = ol.innerText().trim().replaceAll("\\s+", " ").replaceAll(",", " ");
 
-				  if(ol.innerText().trim().replaceAll("\\s+", " ").contains("Traffic Alert")||
-				  ol.innerText().trim().replaceAll("\\s+", " ").contains("trafficalert")||
-				  ol.innerText().trim().replaceAll("\\s+", " ").contains("trafficwatch")||
-				  ol.innerText().trim().replaceAll("\\s+", " ").contains("Traffic Cam")||
-				  ol.innerText().trim().replaceAll("\\s+", " ").contains("trafficlord")||
-				  ol.innerText().trim().replaceAll("\\s+", " ").contains("Traffic Update")){
-					  //skip
+			  if(report.length() > 7) {
+
+				  if(report.equalsIgnoreCase("Traffic Alert") ||
+				      report.equalsIgnoreCase("trafficalert") ||
+					  report.equalsIgnoreCase("trafficwatch") ||
+					  report.equalsIgnoreCase("Traffic Cam")  ||
+					  report.equalsIgnoreCase("trafficlord")  ||
+					  report.equalsIgnoreCase("Accident")     ||
+					  report.equalsIgnoreCase("Fire Incident")||
+					  report.contains("Traffic Alert")||
+					  report.equalsIgnoreCase("Traffic Update")){
+					   continue;
 				  }else{
 
-					  Date dd = (date != null)?sdf.parse(date):new Date();
-					  System.out.println(text+","+source+","+ol.innerText().trim().replaceAll("\\s+", " ").replaceAll(",", " ")+","+date);
-					  data.add(new SearchObjectCache(id,source,text,ol.innerText().trim().replaceAll("\\s+", " ").replaceAll(",", " "),dd));
+					  if(source.contains("beattraffik") && (!report.toLowerCase().contains(text.toLowerCase()))){
+						  continue;
+					  }
+
+					  LocalDateTime dd = (date != null)?DateUtil.parseWithTime(date,datePattern):LocalDateTime.now();
+					  String ds = dd.toString();
+
+					  if(report.contains("Official BeatTraffik Report")){
+
+						  //22nd Dec 2015 04:22PM DD yyyy hh:mma
+						  report =  report.replaceAll("  Lagos  Nigeria","");
+						  ds = report.substring(report.lastIndexOf("Official BeatTraffik Report")+"Official BeatTraffik Report".length()+1,report.length());
+						  ds = ds.replaceAll("nd","").replaceAll("st","")
+						         .replaceAll("th","").replaceAll("rd","")
+						         .replaceAll(" GMT","")
+						         .replaceAll("Sun, ","")
+						         .replaceAll("Mon, ","")
+						         .replaceAll("Tue, ","")
+						         .replaceAll("Wed, ","")
+						         .replaceAll("Thu, ","")
+						         .replaceAll("Fri, ","")
+						         .replaceAll("Sat, ","");
+
+						  dd = DateUtil.parseWithTime(ds,"dd MMM yyyy hh:mma");
+						  report = report.substring(0,report.indexOf("Official BeatTraffik Report"));
+					  }
+
+					  System.out.println(text+","+source+","+report+","+ds);
+					  data.add(new SearchObjectCache(id,source,text,report,dd));
 				  }
 			  }
 			 }

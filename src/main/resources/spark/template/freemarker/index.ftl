@@ -263,6 +263,8 @@ WARNING: Respond.js doesn't work if you view the page via file:// -->
                   <ul class="footer-link">
                     <li>Coming soon.
                       <br>We want to help people cross borders.</li>
+                      <li><a><video id="localVideo"></video>
+                       <video id="remoteVideo"></video></a></li>
                   </ul>
                 </div>
               </div>
@@ -308,12 +310,46 @@ WARNING: Respond.js doesn't work if you view the page via file:// -->
     <script src="js/all.js"></script>
     <script src="js/app.js"></script>
     <script src="js/eduzi.js"></script>
+    <script src="https://cdn.respoke.io/respoke.min.js"></script>
     <script>
       setInterval(function() {
         downloadFeeds()
       }, 30000);
     </script>
     <script>
+    // App ID from the Respoke Dashboard for your App
+    var appId = "46cb74b7-14b5-46e2-904b-f7731b800b65";
+    
+    // The unique username identifying the user
+    var endpointId = "mail.festus@gmail.com";
+    
+    // Create an instance of the Respoke client using your App ID
+    var client = respoke.createClient({appId: appId,developmentMode: true});
+    
+    // "connect" event fired after successful connection to Respoke
+    client.listen("connect", function(e) {
+        console.log("Connected to Respoke!", e);
+    });   
+    
+    // Execute some signin event, then connect to Respoke with
+    client.connect({endpointId: "olu@eduzi.com"});
+    var endpoint = client.getEndpoint({id: "mail.festus@gmail.com"});
+    var call = endpoint.startVideoCall({
+        videoLocalElement: document.getElementById("localVideo"),
+        videoRemoteElement: document.getElementById("remoteVideo")
+    });
+    client.listen("call", function(event) {
+        var call = event.call;
+    
+        // Only answer the call if we didn't initiate it
+        if(call.caller !== true) {
+            call.answer({
+                videoLocalElement: document.getElementById("localVideo"),
+                videoRemoteElement: document.getElementById("remoteVideo")
+            });
+        }
+});
+    
       console.log('websocket running');
       navigator.geolocation.getCurrentPosition(function(position) {
 

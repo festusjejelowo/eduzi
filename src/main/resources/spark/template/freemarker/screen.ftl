@@ -21,8 +21,8 @@
                                       <div  id="owl-feed" style="height:200px;" class="owl-carousel">
                                         <div class="item" style="width:850px;font-family: 'Abel', sans-serif;font-size:30px;">
                                             <p style="font-family: 'Abel', sans-serif;">
-                                                <i class="fa fa-calendar-check-o" style="color:#BCDE1D"></i>&nbsp; Good afternoon, ${user.name}.
-                                                <br> Tomorrow is <b style="color:orange;">Wednesday</b> and it is going to rain.&nbsp;&nbsp;&nbsp; You should leave home between <b style="color:orange;">7.50 and 8.00</b> and take Ikeja Maryland route.                                       
+                                                <i class="fa fa-calendar-check-o" style="color:#BCDE1D"></i>&nbsp;${message.title}.
+                                                <br> Tomorrow is <b style="color:orange;">${message.time}</b> and ${message.type}.&nbsp;You should leave home between <b style="color:orange;">${message.text}</b> and take ${message.place} route.                                       
                                                 <h4>Suggestion&nbsp;|&nbsp;<i class="fa fa-map-marker"></i>&nbsp;Source: <a>eduzi.move</a></h4>
                                             </p>
                                         </div>

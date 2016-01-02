@@ -48,7 +48,7 @@ public class FeedCache{
 			 feed.setUrl(item.getUrl());
 			 feed.setName(item.getTitle());
 			 feed.setText(item.getText());
-			 feed.setTime(item.getDate());
+			// feed.setTime(item.getDate());
 
 			 records.add(feed);
 			 id++;

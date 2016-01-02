@@ -26,6 +26,7 @@
                         <li><a href="#"><b>Report:</b></a></li>
                         <li><a href="#"><i class="fa fa-car" style="color:orange"></i>&nbsp;Traffic</a></li>
                         <li><a href="#"><i class="fa fa-fw fa-user-secret" style="color:#000000"></i>&nbsp;Crime</a></li>
+                        <li><a href="#"><i class="fa fa-bell"></i><span class="badge" style="color:red;">2</span></a></li>
                     </ul>
                     <ul class="nav navbar-nav  navbar-right ">
                         <li class="hidden-xs">

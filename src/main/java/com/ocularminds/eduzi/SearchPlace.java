@@ -20,13 +20,13 @@ public class SearchPlace {
 
 	public static String EDUZI_GOOGLE_GEOKEY = "AIzaSyDH4-YeYCdjvXN6bbzAoLhypHdu0mCX83o";
 	public static String EDUZI_GOOGLE_DIRKEY = "AIzaSyBXjGHEeOP9ZSQCuOivf-9ZlDQZdalHNa4";
-	public static String EDUZI_OPWEATHER_KEY = "873b6d60d403c65dc6d5a2ba55346d61";
+	public static String EDUZI_OPWEATHER_KEY = "7343671081dddedf3533db06cbd018ba";
 	public static final double EARTH_RADIUS = 6372.8d;
 	public static int DRIVE_MODE = 0;
 	public static int WALK_MODE = 1;
 
 	//http://api.openweathermap.org/data/2.5/forecast/city?id=524901&APPID=873b6d60d403c65dc6d5a2ba55346d61
-	//http://api.openweathermap.org/data/2.5/forecast/daily?q=Lagos,NG&mode=json&units=metric&cnt=7APPID=873b6d60d403c65dc6d5a2ba55346d61
+	//http://api.openweathermap.org/data/2.5/forecast/daily?q=Lagos,NG&mode=json&units=metric&cnt=7&APPID=7343671081dddedf3533db06cbd018ba
 
 	//web: java $JAVA_OPTS -Dconfig.file=application.conf -Djava.util.logging.config.file=logging.properties -cp "target/lib/*" org.openscoring.server.Main --port $PORT --model-dir "pmml"
 
@@ -163,6 +163,57 @@ public class SearchPlace {
 
 		System.out.println("Places received from server");
 		return received.toString();
+	}
+
+	public static String nextWeather(String place){
+
+		StringBuffer received = new StringBuffer();
+		StringBuffer sb = new StringBuffer("http://api.openweathermap.org/data/2.5/forecast/daily?");
+		sb.append("APPID="+EDUZI_OPWEATHER_KEY);
+		sb.append("&mode=json&units=metric&cnt=1");
+		sb.append("&q="+place);
+
+		try{
+
+			URL url = new URL(sb.toString());
+			HttpURLConnection con = (HttpURLConnection) url.openConnection();
+			con.setDoOutput(true);
+			con.setConnectTimeout(5000);
+			con.setReadTimeout(5000);
+
+			/* 200 represents HTTP OK */
+			if(con.getResponseCode() == 200) {
+
+				BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()), 8192);
+				for (String line; (line = in.readLine()) != null;) {
+					received.append(line);
+				}
+				in.close();
+			} else {
+				System.out.println("Failed to fetch weaather information!! "+sb.toString());
+			}
+
+		}catch(Exception e){
+
+			System.out.println("[eduzi] error loading data to server.");
+			e.printStackTrace();
+
+		}
+
+		System.out.println("Places received from server");
+		String s = received.toString();
+		if(s.length() > 10){
+
+			s = s.substring(s.indexOf("description"),s.lastIndexOf("icon"));//:"sky is clear",
+			s = s.substring(14,s.length()-3);//description":"sky is clear","
+			if(s.contains("sky is")){
+				s = s.replaceAll("sky is","sky would be");
+			}else{
+				s = "is going to ".concat(s);
+			}
+
+		}
+		return s;
 	}
 
 }

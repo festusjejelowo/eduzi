@@ -13,26 +13,12 @@ package com.ocularminds.eduzi.svr;
 public class TrafficSearchJob implements Job{
 
 	// tweeter@gidi traffik
-	final String DATASOURCE = "http://www.vanguardngr.com/"+new java.text.SimpleDateFormat("yyy/MM/dd").format(new java.util.Date())+"/ "+
-	"http://www.thisdaylive.com/news/ "+
-	"http://sunnewsonline.com/new/ "+
-	"https://www.facebook.com "+
-	"https://twitter.com/search?q=traffic%20nigeria&src=typd "+
-	"https://twitter.com/Gidi_Traffic "+
-	"http://www.lindaikejisblog.com/ "+
-	"http://www.channelstv.com/ "+
-	"http://www.channelstv.com/category/local/ "+
-	"http://www.vanguardngr.com/ "+
-	"http://www.punchng.com "+
+	final String DATASOURCE = "http://www.facebook.com "+
 	"http://www.tsaboin.com "+
 	"http://www.beattraffik.com/ "+
-	"http://www.nairaland.com/crime "+
-	"http://www.nairaland.com/recent ";
+	"http://www.nairaland.com/recent ";//accidents, flood and armed robberies on the site.
 
-	final String attributes = "Robbery,Hijack,Flood,Disaster,Rape,Crush,Suspect,Fraud,"+
-						"Illegal,Forge,crime,kill,Attack,Traffic,Slow,Blocked,"+
-						"Moving,Accident,Murder,Hold up,Downpour,Fire";
-
+	final String attributes = "Hijack,Flood,Accident,Slow,Blocked,Moving,Accident,Hold up,Downpour";
 
    public void execute(JobExecutionContext context) throws JobExecutionException{
 

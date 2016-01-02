@@ -150,7 +150,7 @@
 <dependency>
             <groupId>com.jaunt.code</groupId>
             <artifactId>jaunt</artifactId>
-            <version>1.1.1</version>
+            <version>1.1.2</version>
   </dependency>
 <dependency>
 	<groupId>org.mongodb</groupId>
@@ -177,6 +177,31 @@
     <artifactId>pmml-model</artifactId>
     <version>1.2.7</version>
 </dependency>
+<dependency>
+	<groupId>org.apache.oltu.oauth2</groupId>
+	<artifactId>org.apache.oltu.oauth2.client</artifactId>
+	<version>1.0.1</version>
+</dependency>
+<!--
+<dependency>
+    <groupId>com.digium.respoke</groupId>
+    <artifactId>respoke-java</artifactId>
+    <version>1.0.0</version>
+</dependency>
+import com.digium.respoke.*;
+
+Respoke client = new Respoke();
+import com.digium.respoke.*;
+
+Respoke client = new Respoke(new HashMap<String, String>() {{
+    put("appId", "c10a2075-3f3d-466f-82f9-d2285e64c5d4");
+    put("appSecret", "eb327e57-e766-49de-b801-ef612a70509e");
+    put("roleId", "371F82D1-E4CE-4BB0-B2BB-79EA3497FC4F");
+    put("endpointId", "spock@enterprise.com");
+}});
+
+String tokenId = client.getTokenId();
+-->
 </dependencies>
 <build>
     <plugins>

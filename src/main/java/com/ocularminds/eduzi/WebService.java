@@ -32,6 +32,7 @@ import static j2html.TagCreator.*;
 
 import com.ocularminds.eduzi.vao.Feed;
 import com.ocularminds.eduzi.util.FeedCache;
+import com.ocularminds.eduzi.util.DateUtil;
 import com.ocularminds.eduzi.util.FileUtil;
 import com.ocularminds.eduzi.util.PasswordUtil;
 import com.ocularminds.eduzi.vao.Place;
@@ -206,9 +207,16 @@ public class WebService {
   				res.redirect("/");
   			    halt();
   			}
+
   			List<Message> messages = writer.findPostForUser(user);
+  			Message message = new Message();
+  			message.setTitle("Good "+DateUtil.timeOfDay()+", "+user.getName().split("\\s+")[0]);
+            message.setTime(DateUtil.tommorow());
+            message.setType(SearchPlace.nextWeather("Lagos,NG"));
+            message.setText("7.50 and 8.00");
+            message.setPlace("Ikeja-Maryland");
   			map.put("timelines",messages);
-  			map.put("message", "You were successfully registered and can login now");
+  			map.put("message",message);
   			map.put("email", user.getEmail());
   			map.put("user", user);
 
@@ -217,6 +225,7 @@ public class WebService {
   			res.redirect("/");
   			halt();
   		}
+
         return new ModelAndView(map, "screen.ftl");
   	 }, new FreeMarkerEngine());
   	/*
