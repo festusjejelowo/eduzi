@@ -1,14 +1,6 @@
 package com.ocularminds.eduzi;
 /**
  * SearchBroker.java
- * Purpose: Class shared by the Property crawler API
- * to retrieve property key-value pairs from any URI.
- * Supported URI includes http://,file:/// classpath:resources/.
- *
- * These resources are also validated to meet expected property files
- * which MUST be any of .properties or .json after which a DefaultProperty class
- * is returned.
- *
  * code snipet:<br>
  * <pre>
  * String[] uri = {"classpath:resources/jdbc.properties",
@@ -69,33 +61,26 @@ public class SearchBroker{
 		return broker;
 	}
 
-	public static void displayManual(){
+	public static void add(ExecutorService service,List<Future<SearchObjectCache>> tasks,int agent,String source,String attributes){
 
-		logger.info("usage: SearchBroker \"website uri deliminated by spaces\n"+
-					"http://www.nairaland.com/recent http://www.nairaland.com/crime");
+		Future f = null;
+		if(agent == SearchAgent.TRAFFIC_SEARCH_AGENT){
+
+			f = service.submit(new TrafficAgent(source,attributes));
+			tasks.add(f);
+
+		}else if(agent == SearchAgent.EVENT_SEARCH_AGENT){
+
+			f = service.submit(new EventAgent(source,attributes));
+			tasks.add(f);
+		}else if(agent == SearchAgent.SPORT_SEARCH_AGENT){
+
+			f = service.submit(new SportAgent(source,attributes));
+			tasks.add(f);
+
+		}else{}
 	}
 
-    /**
-    * display fine error by error type
-    */
-	public static void displayError(int error){
-
-		String display = "";
-		StringBuffer sb = new StringBuffer();
-		sb.append("Invalid URI! URI must be prefixed with http");
-
-		switch(error){
-
-			case SearchBroker.URI_MALFORMED:
-			display = sb.toString();
-			break;
-
-			default:
-			display = "Property file not found!";
-		}
-
-		//logger.info(display);
-	}
 
 	/**
 	 * This is the only method exposed as the API call
@@ -110,7 +95,7 @@ public class SearchBroker{
 	 * @return List class containing the loaded SearchObjectCache.
 	*/
 
-	public static List<SearchObjectCache> search(String resources,String attributes){
+	public static List<SearchObjectCache> search(String resources,String attributes,int agent)throws InterruptedException{
 		//"crawling data sources";
         ExecutorService service = Executors.newFixedThreadPool(10);
         List<SearchObjectCache> records = new ArrayList<SearchObjectCache>();
@@ -118,17 +103,10 @@ public class SearchBroker{
 		List<Future<SearchObjectCache>> tasks = new ArrayList<Future<SearchObjectCache>>();
 		try{
 
-			for(String source:sources){
-
-			   Future future = service.submit(new SearchAgent(source,attributes));
-			   tasks.add(future);
-			}
-
-			for(Future<SearchObjectCache> task:tasks){
-
-				List<SearchObjectCache> data = (List<SearchObjectCache>)task.get();
-				records.addAll(data);
-
+			//for(String source:sources){
+			sources.stream().forEach(source ->add(service,tasks,agent,source,attributes));
+			for(Future<SearchObjectCache> task: tasks){
+				records.addAll((List<SearchObjectCache>)task.get());
 			}
 
 			service.shutdown();
@@ -173,8 +151,8 @@ public class SearchBroker{
 		sched = sf.getScheduler();
 		sched.deleteJob(JobKey.jobKey("event-search-job",  "search.broker.jobs"));
 		sched.deleteJob(JobKey.jobKey("traffic-search-job","search.broker.jobs"));
-		sched.deleteJob(JobKey.jobKey("sport-search-job",  "search.broker.jobs"));
-		sched.deleteJob(JobKey.jobKey("data-analysis-job", "search.broker.jobs"));
+		//sched.deleteJob(JobKey.jobKey("sport-search-job",  "search.broker.jobs"));
+		//sched.deleteJob(JobKey.jobKey("data-analysis-job", "search.broker.jobs"));
 
 		System.out.println("------- Initialization Complete -----------");
 		System.out.println("------- Scheduling Jobs -------------------");
@@ -185,12 +163,12 @@ public class SearchBroker{
 		                  .startNow().withSchedule(simpleSchedule().withIntervalInSeconds(60*03).repeatForever())
                           .build();
 
-         JobDetail tfcJob = newJob(TrafficSearchJob.class).withIdentity("traffic-search-job", "search.broker.jobs").build();
+        JobDetail tfcJob = newJob(TrafficSearchJob.class).withIdentity("traffic-search-job", "search.broker.jobs").build();
 		Trigger TT = newTrigger().withIdentity("traffic-trigger", "search.broker.jobs")
 						  .startNow().withSchedule(simpleSchedule().withIntervalInSeconds(60*03).repeatForever())
 				          .build();
 
-        JobDetail danJob = newJob(DataAnalysisJob.class).withIdentity("data-analysis-job", "search.broker.jobs").build();
+        /*JobDetail danJob = newJob(DataAnalysisJob.class).withIdentity("data-analysis-job", "search.broker.jobs").build();
 		Trigger DT = newTrigger().withIdentity("analysis-trigger", "search.broker.jobs")
 						  .startNow().withSchedule(simpleSchedule().withIntervalInSeconds(60*15).repeatForever())
 				          .build();
@@ -198,12 +176,12 @@ public class SearchBroker{
 	    JobDetail spoJob = newJob(SportSearchJob.class).withIdentity("sport-search-job", "search.broker.jobs").build();
 		Trigger ST = newTrigger().withIdentity("sport-trigger", "search.broker.jobs")
 						  .startNow().withSchedule(simpleSchedule().withIntervalInSeconds(60*10).repeatForever())
-				          .build();
+				          .build();*/
 
 		sched.scheduleJob(tfcJob, TT);
 		sched.scheduleJob(evtJob, ET);
-		sched.scheduleJob(spoJob, ST);
-		sched.scheduleJob(danJob, DT);
+		//sched.scheduleJob(spoJob, ST);
+		//sched.scheduleJob(danJob, DT);
 
 		sched.start();
 		System.out.println("[eduzi] all jobs started.");

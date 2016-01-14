@@ -4,11 +4,12 @@ package com.ocularminds.eduzi.svr;
  import org.quartz.JobExecutionContext;
  import org.quartz.JobExecutionException;
 
- import java.util.List;
-
- import com.ocularminds.eduzi.SearchBroker;
- import com.ocularminds.eduzi.SearchObjectLoader;
- import com.ocularminds.eduzi.SearchObjectCache;
+import java.util.List;
+import com.ocularminds.eduzi.Analyser;
+import com.ocularminds.eduzi.SearchAgent;
+import com.ocularminds.eduzi.SearchBroker;
+import com.ocularminds.eduzi.SearchObjectLoader;
+import com.ocularminds.eduzi.SearchObjectCache;
 
 public class EventSearchJob implements Job{
 
@@ -17,8 +18,6 @@ public class EventSearchJob implements Job{
 	"http://www.thisdaylive.com/news/ "+
 	"http://sunnewsonline.com/new/ "+
 	"https://www.facebook.com "+
-	"https://twitter.com/search?q=traffic%20nigeria&src=typd "+
-	"https://twitter.com/Gidi_Traffic "+
 	"http://www.lindaikejisblog.com/ "+
 	"http://www.channelstv.com/ "+
 	"http://www.channelstv.com/category/local/ "+
@@ -33,9 +32,15 @@ public class EventSearchJob implements Job{
 
    public void execute(JobExecutionContext context) throws JobExecutionException{
 
-	   List<SearchObjectCache> data = SearchBroker.search(DATASOURCE,attributes);
-		if(data.size() > 0){
-			SearchObjectLoader.upload(data);
+	   List<SearchObjectCache> data = null;
+	   try{
+
+			data = SearchBroker.search(DATASOURCE,attributes,SearchAgent.EVENT_SEARCH_AGENT);
+			if(data.size() > 0){
+				//Analyser.reduce(data);
+			}
+	   }catch(Exception e){
+		   e.printStackTrace();
 	   }
 
    }

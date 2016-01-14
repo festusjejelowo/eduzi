@@ -5,8 +5,11 @@ public class Place implements Serializable,Comparable<Place>{
 
    private long id;
    private String name;
+   private String userId;
    private double longitude;
    private double latitude;
+   private double longitude2;
+   private double latitude2;
    private double distance;
    private String travel;
    private String time;
@@ -37,6 +40,14 @@ public class Place implements Serializable,Comparable<Place>{
 	   this.name = name;
    }
 
+   public String getUserId(){
+	   return this.userId;
+   }
+
+   public void setUserId(String userId){
+	   this.userId = userId;
+   }
+
    public double getLatitude(){
 	   return this.latitude;
    }
@@ -51,6 +62,22 @@ public class Place implements Serializable,Comparable<Place>{
 
    public void setLongitude(double longitude){
 	   this.longitude = longitude;
+   }
+
+   public double getLatitude2(){
+	   return this.latitude2;
+   }
+
+   public void setLatitude2(double latitude2){
+	   this.latitude2 = latitude2;
+   }
+
+   public double getLongitude2(){
+	   return this.longitude2;
+   }
+
+   public void setLongitude2(double longitude2){
+	   this.longitude2 = longitude2;
    }
 
    public double getDistance(){

@@ -4,7 +4,10 @@ import java.security.SecureRandom;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.ArrayList;
+import java.net.URL;
 import java.io.File;
+import java.io.FileWriter;
+import java.io.BufferedWriter;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileNotFoundException;
@@ -12,6 +15,10 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 import java.math.BigInteger;
 import java.nio.channels.FileChannel;
 import javax.servlet.http.Part;
@@ -119,5 +126,75 @@ public class FileUtil{
    	   }
 
    	   return bytes;
+   }
+
+   public static String readFromUrl(String url){
+
+	   String scrapped = "";
+	   try{
+
+		   URL u = new URL(url);
+           scrapped = new String(Files.readAllBytes(Paths.get(u.toURI())));
+
+	   }catch(Exception e){
+		   e.printStackTrace();
+	   }
+
+	   return scrapped;
+   }
+
+   public static boolean isFileExists(String file){
+
+	   boolean exists = false;
+	   try{
+
+			File f = new File(file);
+			exists = f.exists();
+	   	}catch(Exception e){
+	   		e.printStackTrace();
+	   }
+
+	   return exists;
+   }
+
+   public static void append(String file,String data){
+
+		 try{
+
+			File f = new File(file);
+			if(!f.exists()){
+				f.createNewFile();
+			}
+
+			//true = append file
+			FileWriter fw = new FileWriter(f.getName(),true);
+			BufferedWriter br = new BufferedWriter(fw);
+			br.write(data);
+			br.close();
+
+	   }catch(Exception e){
+		  e.printStackTrace();
+	   }
+   }
+
+   public static void writeToDisk(String dataURL, String fileName) {
+
+       String fileExtension = extension(fileName);
+       /*    fileRootNameWithBase = './uploads/' + fileName,
+           filePath = fileRootNameWithBase,
+           fileID = 2,
+           fileBuffer;
+
+       // @todo return the new filename to client
+       while (fs.existsSync(filePath)) {
+           filePath = fileRootNameWithBase + '(' + fileID + ').' + fileExtension;
+           fileID += 1;
+       }
+
+       dataURL = dataURL.split(',').pop();
+       fileBuffer = new Buffer(dataURL, 'base64');
+       fs.writeFileSync(filePath, fileBuffer);
+
+       console.log('filePath', filePath);*/
    }
 }

@@ -14,6 +14,27 @@ import java.time.format.DateTimeFormatter;
 
 public class DateUtil{
 
+  public static String todayOrYesterday(String day) {
+
+       LocalDate today = LocalDate.now();
+       if(day.equalsIgnoreCase("Yesterday")){
+		   today = today.minusDays(1);
+	   }
+       return DateTimeFormatter.ofPattern("dd MMM yyyy").format(today);
+  }
+
+  public static String hourOrMinutePast(int past,String hourOrMinute,String pattern) {
+
+       LocalDateTime today = LocalDateTime.now();
+       if(hourOrMinute.equalsIgnoreCase("Hours")){
+       	  today = today.minusHours(past);
+	  }else{
+		  today = today.minusMinutes(past);
+	  }
+
+	  return DateTimeFormatter.ofPattern(pattern).format(today);
+  }
+
   public static String tommorow() {
 
        LocalDate today = LocalDate.now();
@@ -103,7 +124,17 @@ System.out.println("date time after adding modifying nanos is : "+ldtmdn.toStrin
 	 try{
 		 ds = new SimpleDateFormat(pattern).parse(date);
 	 }catch(Exception e){
+
 		 e.printStackTrace();
+		 if(date.contains("Yeeay")){
+
+			 //"Yeeay 04:34PM"
+			 LocalDate d = LocalDate.now();
+			 date = DateTimeFormatter.ofPattern("dd MMM yyyy").format(d)+ date.substring(date.lastIndexOf("Yeeay")+1,date.length());
+			 parseWithTime(date,"dd MMM yyyy hh:mma");
+
+		 }
+
 	 }
      return (ds != null)?LocalDateTime.ofInstant(Instant.ofEpochMilli(ds.getTime()), ZoneId.systemDefault()):null;
   }

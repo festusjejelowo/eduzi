@@ -12,6 +12,7 @@ import java.nio.file.Files;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.UUID;
 import java.lang.reflect.Type;
 import java.text.SimpleDateFormat;
 
@@ -27,6 +28,7 @@ import spark.utils.StringUtils;
 import spark.template.freemarker.FreeMarkerEngine;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import static j2html.TagCreator.*;
 
@@ -43,8 +45,6 @@ import com.ocularminds.eduzi.vao.Message;
 import com.ocularminds.eduzi.dao.Authorizer;
 import com.ocularminds.eduzi.dao.PostWriter;
 import com.ocularminds.eduzi.dao.DbFactory;
-
-import com.heroku.sdk.jdbc.DatabaseUrl;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.beanutils.BeanUtils;
@@ -54,8 +54,6 @@ import javax.servlet.MultipartConfigElement;
 
 import org.eclipse.jetty.util.MultiMap;
 import org.eclipse.jetty.util.UrlEncoded;
-import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
-import org.eclipse.jetty.websocket.client.WebSocketClient;
 
 public class WebService {
 
@@ -94,42 +92,18 @@ public class WebService {
 		return request.session().attribute(USER_SESSION_ID);
    }
 
-  public static void main(String[] args) {
+  public static void main(String[] args){
 
        WebService ws = new WebService();
        ws.listen();
-  }
-
-  public void broadcast(Object o){
-
-	  String destUri = "ws://localhost:"+System.getenv("PORT")+"/chat/";
-	  WebSocketClient client = new WebSocketClient();
-	  WebSocketHandler socket = new WebSocketHandler(o);
-	  try {
-
-		  client.start();
-		  URI echoUri = new URI(destUri);
-		  ClientUpgradeRequest request = new ClientUpgradeRequest();
-		  client.connect(socket, echoUri, request);
-		  System.out.printf("Connecting to : %s%n", echoUri);
-		  socket.awaitClose(5, TimeUnit.SECONDS);
-
-	  } catch (Throwable t) {
-		  t.printStackTrace();
-	  } finally {
-		  try {
-			  client.stop();
-		  } catch (Exception e) {
-			  e.printStackTrace();
-		 }
-	}
+       VideoService vs = new VideoService();
+       vs.start();
   }
 
   private void listen(){
 
 	 Spark.port(Integer.valueOf(System.getenv("PORT")));
 	 Spark.staticFileLocation("/public");
-	 Spark.webSocket("/chat", WebSocketService.class);
 
 	 Spark.get("/", (request, response) -> {
 
@@ -137,8 +111,6 @@ public class WebService {
 		 attributes.put("message", "Hello World!");
 		 return new ModelAndView(attributes, "index.ftl");
         }, new FreeMarkerEngine());
-
-
 
      Spark.get("/chat", (request, response) -> {
 		 Map<String, Object> attributes = new HashMap<>();
@@ -162,7 +134,7 @@ public class WebService {
 
 		fault.setData((Object)data);
 		fault.setGroup("feed");
-		broadcast(fault);
+		//broadcast(fault);
 		fault.setData(null);
 
 		return fault;
@@ -194,39 +166,46 @@ public class WebService {
 		return new ModelAndView(map, "timeline.ftl");
 	 }, new FreeMarkerEngine());
 
-  /*
-  	 * Presents the login form or redirect the user to
-  	 * her timeline if it's already logged in
-  	 */
+
+	 /*
+	 * Displays the latest messages of all users.
+	 */
+	Spark.get("/video", (req, res) -> {
+
+		User user = getAuthenticatedUser(req);
+		Map<String, Object> map = new HashMap<>();
+		map.put("pageTitle", "Public Timeline");
+		return new ModelAndView(map, "video.ftl");
+	 }, new FreeMarkerEngine());
+
+
+ /*
+ * Presents the login form or redirect the user to
+ * her timeline if it's already logged in
+ */
   	Spark.get("/screen", (req, res) -> {
 
   		Map<String, Object> map = new HashMap<>();
-  		if(req.queryParams("r") != null) {
+		User user = getAuthenticatedUser(req);
+		if(user == null){
+			res.redirect("/");
+			halt();
+		}else{
 
-  			User user = getAuthenticatedUser(req);
-  			if(user == null){
-  				res.redirect("/");
-  			    halt();
-  			}
+			List<Message> messages = writer.findPostForUser(user);
+			Message message = new Message();
+			message.setTitle("Good "+DateUtil.timeOfDay()+", "+user.getName().split("\\s+")[0]);
+			message.setTime(DateUtil.tommorow());
+			message.setType(SearchPlace.nextWeather("Lagos,NG"));
+			message.setText("7.50 and 8.00");
+			message.setPlace("Ikeja-Maryland");
+			map.put("timelines",messages);
+			map.put("message",message);
+			map.put("email", user.getEmail());
+			map.put("user", user);
+			map.put("username",user.getName().split("\\s+")[0]);
 
-  			List<Message> messages = writer.findPostForUser(user);
-  			Message message = new Message();
-  			message.setTitle("Good "+DateUtil.timeOfDay()+", "+user.getName().split("\\s+")[0]);
-            message.setTime(DateUtil.tommorow());
-            message.setType(SearchPlace.nextWeather("Lagos,NG"));
-            message.setText("7.50 and 8.00");
-            message.setPlace("Ikeja-Maryland");
-  			map.put("timelines",messages);
-  			map.put("message",message);
-  			map.put("email", user.getEmail());
-  			map.put("user", user);
-  			map.put("username",user.getName().split("\\s+")[0]);
-
-  		}else{
-
-  			res.redirect("/");
-  			halt();
-  		}
+	   }
 
         return new ModelAndView(map, "screen.ftl");
   	 }, new FreeMarkerEngine());
@@ -253,7 +232,7 @@ public class WebService {
   		if(fault.getData() != null) {
 
   			addAuthenticatedUser(req, (User)fault.getData());
-  			res.redirect("/screen?r=1");
+  			res.redirect("/screen");
 
   		} else {
 
@@ -338,7 +317,7 @@ public class WebService {
   	Spark.before("/register", (req, res) -> {
   		User authUser = getAuthenticatedUser(req);
   		if(authUser != null) {
-  			res.redirect("/screen?r="+PasswordUtil.hashPassword("1"));
+  			res.redirect("/screen");
   			halt();
   		}
   	});
@@ -349,6 +328,7 @@ public class WebService {
   	Spark.get("/logout", (req, res) -> {
   		removeAuthenticatedUser(req);
   		res.redirect("/public");
+  		halt();
   		return null;
   	 });
 
@@ -461,7 +441,7 @@ public class WebService {
   		BeanUtils.populate(comment, params);
 
 		writer.comment(messageid,comment, profileUser.getId());
-		res.redirect("/screen?r=" + username);
+		res.redirect("/screen");
 		return null;
 
 	 });
@@ -477,7 +457,7 @@ public class WebService {
 		User authUser = getAuthenticatedUser(req);
 
 		writer.uncomment(commentid);
-		res.redirect("/screen?r=" + username);
+		res.redirect("/screen");
 		return null;
 
 	 });
@@ -494,7 +474,7 @@ public class WebService {
 		User authUser = getAuthenticatedUser(req);
 
 		writer.attend(messageid, profileUser.getId());
-		res.redirect("/screen?r=" + username);
+		res.redirect("/screen");
 		return null;
 	 });
 
@@ -509,7 +489,7 @@ public class WebService {
 		User authUser = getAuthenticatedUser(req);
 
 		authorizer.unfollow(authUser.getId(), profileUser.getId());
-		res.redirect("/screen?r=" + username);
+		res.redirect("/screen");
 		return null;
 	 });
 
@@ -523,7 +503,7 @@ public class WebService {
 		User authUser = getAuthenticatedUser(req);
 
 		authorizer.unfollow(authUser.getId(), profileUser.getId());
-		res.redirect("/screen?r=" + username);
+		res.redirect("/screen");
 		return null;
 	 });
 
@@ -595,7 +575,7 @@ public class WebService {
 		writer.write(m);
 
 		res.status(200);
-		res.redirect("/screen?r=");
+		res.redirect("/screen");
 		return fault;
 
   },new JsonFront());
@@ -656,7 +636,7 @@ public class WebService {
 
 		System.out.println("updating user "+userid+" location longitude:"+longitude+",latitude:"+latitude);
 
-		String name = null;//"Oshodi Lagos Apapa Ikorodu Oworonsoki Ojota Ikeja Agege Ogba Somolu OjuElegba Berger Ojodu ";//"Oshodi";
+		String name = null;//"Oshodi Lagos Nigeria Lagos Lagos Nigeria Apapa Lagos Nigeria Ikorodu Lagos Nigeria Oworonsoki Ojota Ikeja Agege Ogba Somolu OjuElegba Berger Ojodu ";//"Oshodi";
 		String type = null;//"neighborhood|political|routes|point_of_interest";
 		String distance = "500";
 		String s = SearchPlace.search(latitude,longitude,distance,type,name);

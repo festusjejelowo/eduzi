@@ -1,2 +1,3 @@
-web:    java -cp target\eduzi-core-1.0.jar;target\dependency\* com.ocularminds.eduzi.WebService
-#queue:  java -cp target\eduzi-core-1.0.jar;target\dependency\* com.ocularminds.eduzi.SearchBroker
+web:    java -XX:+UseG1GC -XX:+UseStringDeduplication -cp target\eduzi-core-1.0.jar;target\dependency\* com.ocularminds.eduzi.WebService
+#web: 	java -XX:+UseG1GC -XX:+UseStringDeduplication -cp target\dependency\* org.openscoring.server.Main --port 7950 --model-dir "pmml"
+#queue: java -XX:+UseG1GC -XX:+UseStringDeduplication -cp target\eduzi-core-1.0.jar;target\dependency\* com.ocularminds.eduzi.SearchBroker

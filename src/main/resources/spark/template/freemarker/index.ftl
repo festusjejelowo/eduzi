@@ -153,14 +153,13 @@ WARNING: Respond.js doesn't work if you view the page via file:// -->
                         <br>
                       </p>
                       <blockquote style="font-size:22px;line-height:0.8;">
-                        <b><i class="fa fa-users"></i></b>&nbsp;Connect with friends who are using <b>eduzi</b>&nbsp;
+                        <img src="images/friends.png" width="50" height="50">&nbsp;Connect with friends who are using <b>eduzi</b>&nbsp;
                         <br>
+                        <img src="images/traffic.png" width="50" height="50">&nbsp;To anticipate and avoid traffic congestion
                         <br>
-                        <b><i class="fa fa-car"></i></b>&nbsp;To anticipate and avoid traffic congestion
+                        <img src="images/place.png" width="50" height="50">&nbsp;Find route through nearby angel or map&nbsp;&nbsp;&nbsp;
                         <br>
-                        <br>
-                        <b><i class="fa fa-map-marker"></i></b>&nbsp;Find route through nearby angel or map&nbsp;&nbsp;&nbsp;
-                        <br>
+                        <img src="images/video-chat.png" width="50" height="50">&nbsp;Talk to your friend face-to-face&nbsp;&nbsp;&nbsp;
                         <br>
                       </blockquote>
                       <h4>Any eduzi.movement&nbsp;|&nbsp;<i class="fa fa-map-marker"></i>&nbsp;Source: <a>#</a></h4>
@@ -310,54 +309,5 @@ WARNING: Respond.js doesn't work if you view the page via file:// -->
     <script src="js/all.js"></script>
     <script src="js/app.js"></script>
     <script src="js/eduzi.js"></script>
-    <script src="https://cdn.respoke.io/respoke.min.js"></script>
-    <script>
-      setInterval(function() {
-        downloadFeeds()
-      }, 30000);
-    </script>
-    <script>
-    // App ID from the Respoke Dashboard for your App
-    var appId = "46cb74b7-14b5-46e2-904b-f7731b800b65";
-    
-    // The unique username identifying the user
-    var endpointId = "mail.festus@gmail.com";
-    
-    // Create an instance of the Respoke client using your App ID
-    var client = respoke.createClient({appId: appId,developmentMode: true});
-    
-    // "connect" event fired after successful connection to Respoke
-    client.listen("connect", function(e) {
-        console.log("Connected to Respoke!", e);
-    });   
-    
-    // Execute some signin event, then connect to Respoke with
-    client.connect({endpointId: "olu@eduzi.com"});
-    var endpoint = client.getEndpoint({id: "mail.festus@gmail.com"});
-    var call = endpoint.startVideoCall({
-        videoLocalElement: document.getElementById("localVideo"),
-        videoRemoteElement: document.getElementById("remoteVideo")
-    });
-    client.listen("call", function(event) {
-        var call = event.call;
-    
-        // Only answer the call if we didn't initiate it
-        if(call.caller !== true) {
-            call.answer({
-                videoLocalElement: document.getElementById("localVideo"),
-                videoRemoteElement: document.getElementById("remoteVideo")
-            });
-        }
-});
-    
-      console.log('websocket running');
-      navigator.geolocation.getCurrentPosition(function(position) {
-
-        $('.latitude').val(position.coords.latitude);
-        $('.longitude').val(position.coords.longitude);
-
-      });
-    </script>
 </body>
-
 </html>

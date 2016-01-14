@@ -9,6 +9,7 @@ import java.util.TreeMap;
 import java.time.Month;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Map.Entry;
 import java.util.Comparator;
 import java.util.Collections;
 import java.util.stream.Stream;
@@ -27,6 +28,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 import com.ocularminds.eduzi.util.DateUtil;
+import com.ocularminds.eduzi.util.FileUtil;
 import com.ocularminds.eduzi.util.TextUtil;
 
 import javax.xml.bind.JAXBException;
@@ -44,6 +46,9 @@ import org.jpmml.model.JAXBUtil;
 import org.jpmml.model.visitors.LocatorNullifier;
 
 public class Analyser{
+
+	static Map<String,String> routes = new HashMap<String,String>();
+	//static
 
 	public static void analyse(List<String> data){
 
@@ -207,10 +212,34 @@ public class Analyser{
     }
 
     public long factorial(int n) {
-	 return LongStream.rangeClosed(1, n).reduce((a, b) -> a * b).getAsLong();
+	    return LongStream.rangeClosed(1, n).reduce((a, b) -> a * b).getAsLong();
     }
 
-    private static String extractRoute(String s){
+    public static String traffic(String text){
+
+		if(text.toLowerCase().contains("jam")||text.toLowerCase().contains("stand still")){
+			return "Heavy";
+		}else if(text.toLowerCase().contains("broken down")||text.toLowerCase().contains("accident")){
+			return "Heavy";
+		}else if(text.toLowerCase().contains("heavy traffic")){
+			return "Heavy";
+		}else if(text.toLowerCase().contains("slow moving")){
+			return "Slow-Moving";
+		}else if(text.toLowerCase().contains("slow")){
+			return "Slow";
+		}else{
+			return "Free";
+		}
+	}
+
+	private static void addRoute(String route,String code){
+
+		if(routes.get(route) == null){
+			routes.put(route,code);
+		}
+	}
+
+    private static String extractRoute(String s,Map<String,String> routes){
 
 		int from = s.toLowerCase().indexOf("from");
 		int is = s.toLowerCase().indexOf("is");
@@ -218,8 +247,82 @@ public class Analyser{
 		if(is < from)  is = s.toLowerCase().indexOf("being");
 		if(is < from)  is = s.toLowerCase().indexOf("as");
 		if(from < 0) from = s.toLowerCase().indexOf("at");
-		return (from > -1 && is >-1)?s.substring(from+5,is):"NA";
+
+		String route = null;
+		try{
+			 route = (from > -1 && is >-1)?s.substring(from+5,is):null;
+		}catch(Exception e){
+			System.out.println(s+".substring("+from+"5,"+is+")");
+		}
+
+		if(route == null){
+           for (Entry<String, String> e : routes.entrySet()){
+		       if(TextUtil.isSimilar(e.getKey(),s)){
+				   route = e.getKey();
+				   break;
+			   }
+           }
+           if(route == null){
+			   if(s.toLowerCase().indexOf("from") > -1){
+				   route = s.substring(s.toLowerCase().indexOf("from"),s.length());
+			   }else{
+				   route = s;
+			   }
+		   }
+		}
+
+		if(route.toLowerCase().contains("from")){
+			route = route.substring(route.toLowerCase().indexOf("from")+5,route.length());
+		}
+
+		if(route.toLowerCase().contains("from a lil further from !")){
+			route = route.substring(route.toLowerCase().indexOf("from a lil further from !")+"from a lil further from !".length(),route.length());
+		}
+
+		if(route.toLowerCase().contains("a lil further from !")){
+			route = route.substring(route.toLowerCase().indexOf("a lil further from !")+"a lil further from !".length(),route.length());
+		}
+
+		return route;
 	}
+
+	public static void reduce(List<SearchObjectCache> data){
+
+		List<SearchObjectCache> search = new ArrayList<SearchObjectCache>();
+		StringBuffer sb = new StringBuffer();
+		if(!FileUtil.isFileExists("traffic_data.csv")){
+			sb.append(String.format("%s,%s,%s,%s\n","ROUTE","DAY","TIME","STATUS"));
+		}
+
+		for(SearchObjectCache o: data){
+
+			String route = extractRoute(o.getText(),routes);
+            if(route.length() < 105){
+
+
+				if(route.length() > 70){
+					route = route.substring(0,70);
+				}
+				String code = routes.get(route);
+				if(code == null){
+
+					code = Integer.toString((int)(Math.random()*8000 + 1000));
+					addRoute(route,code);
+
+				}
+
+			    sb.append(String.format("%s,%s,%s.%s,%s\n",code,o.getDate().getDayOfWeek(),o.getDate().getHour(),o.getDate().getMinute(),traffic(o.getText())));
+			}
+		}
+
+		String file = "traffic_data.csv";
+		FileUtil.append(file, sb.toString());
+		sb = new StringBuffer();
+		for (Entry<String, String> e : routes.entrySet()){
+		   sb.append(e.getValue()+","+e.getKey()+"\n");
+	   }
+	   FileUtil.append("traffic_routes.csv", sb.toString());
+   }
 
 	//gather traffic data to include, attribute(slow,heavy,free,win,draw,loose),time and place(route,town,location,home,away)
 	public static void reduce(){
@@ -248,7 +351,7 @@ public class Analyser{
 		"Slow,http://www.tsaboin.com, Slow movement inward !ijora causeway >> !barracksapapa"};
 
 		List<SearchObjectCache> search = new ArrayList<SearchObjectCache>();
-
+        Map<String,String> routes = new HashMap<String,String>();
 		for(int x = 0; x < data.length; x++){
 
 			String[] s = data[x].split(",");
@@ -256,7 +359,7 @@ public class Analyser{
 			String cat = s[0];
 			String text = s[2];
 			String source = s[1];
-			String route = extractRoute(text);
+			String route = extractRoute(text,routes);
 			//java.util.Date dd = new java.util.Date();
 			LocalDateTime dd = DateUtil.parseWithTime("01-01-2015","dd-MM-yyyy");
 		    search.add(new SearchObjectCache(x,source,cat,text,dd,route));
@@ -267,7 +370,7 @@ public class Analyser{
 		//.sorted()
 		.collect(Collectors.toList());
 		System.out.println(" ");
-		System.out.format("%s,%s,%s,%s\n",TextUtil.format("ROUTE",37),"STATUS","WEEK_DAY","TIME");
+		System.out.format("%s,%s,%s,%s\n",TextUtil.format("ROUTE",37),"STATUS","DAY","TIME");
 		filtered.forEach(o -> System.out.format("%s,%s,%s,%s\n",TextUtil.format(o.getLocation(),37),o.getCategory(),TextUtil.format(o.getDay(),9),o.getTime()));
 
 		//The search groups all SearchObjectCache by category:
@@ -293,33 +396,6 @@ public class Analyser{
 
 		//int total = al.parallelStream().mapToInt(e -> e.split(" ").length).sum();
         //System.out.println("Total words:" + total+"\n");
-/*
-        final TreeMap<String, Long> bc = search.stream()
-        .collect(Collectors.groupingBy(SearchObjectCache::getLocation, TreeMap::new, Collectors.counting()));
-		bc.forEach((c, count) ->System.out.println(TextUtil.format(c,45)+" | "+count));
-		*/
-
-		/*
-		 groupingBy with multiple Collectors
-
-		Map<Integer, Data> result = search.stream().collect(
-		        groupingBy(SearchObjectCache::getCategory,collectingAndThen(summarizingDouble(SearchObjectCache::getAge), dss -> new Data((long)dss.getAverage(), (long)dss.getSum()))));
-
-        //Java 8 on multiple fields with aggregations [duplicate]
-        You should create the custom key for your map. The simplest way is to use Arrays.asList:
-        In this case the keys are lists of 5 elements in fixed order. Not quite object-oriented, but simple.
-        Alternatively you can define your own type which represents the custom key and create proper hashCode/equals implementations.
-
-
-        Function<WebRecord, List<Object>> keyExtractor = wr ->
-		    Arrays.<Object>asList(wr.getFiveMinuteWindow(), wr.getCdn(), wr.getIsp(),wr.getResultCode(), wr.getTxnTime());
-
-		Map<List<Object>, Integer> aggregatedData = webRecords.stream().collect(
-        Collectors.groupingBy(keyExtractor, Collectors.summingInt(WebRecord::getReqBytes)));
-
-
-        groupingBy(Pojo::getMajorCategory, groupingBy(Pojo::getMinorCategory))
-      */
 	}
 
 	public static void order(){

@@ -1,0 +1,61 @@
+
+
+	/*private void searchTweet(){
+
+		//search term will be the tweeter handle #giditraffic
+		String url = "http://search.twitter.com/search.json?q=" +encodeURIComponent(that.searchTerm());
+		OAuthService service = new ServiceBuilder()
+		service.provider(TwitterApi.class)
+		service.apiKey("your_api_key")
+		service.apiSecret("your_api_secret")
+	    service.build();
+		$.ajax({
+		  dataType: "jsonp",
+		  url: url,
+		  success: function (response) {
+
+			if (response.results.length > 0) {
+			  // create an array to hold the results
+			  var tweetViewModels = [];
+
+			  // add the new items
+			  $.each(response.results, function () {
+				var tweet = new TweetViewModel(this);
+				tweetViewModels.push(tweet);
+			  });
+
+			  // navigate to the results view model
+			  application.navigateTo(new SearchResultsViewModel(tweetViewModels));
+			  addSearchTermToRecentSearches();
+			} else {
+			  that.userMessage("There were no matches for the given search term");
+			}
+
+			that.isSearching(false);
+		  }
+       });
+	}*/
+	/**
+	*Parses the tweet date to give a more readable format.
+	*
+	private String parseDate(String date) {
+
+	    long diff = (new Date() - new Date(date)) / 1000;
+
+	    if (diff < 60) {
+	      return Long.toString(diff) + " seconds ago";
+	    }
+
+	    diff = diff / 60;
+	    if (diff < 60) {
+	      return Long.toString(diff) + " minutes ago";
+	    }
+
+	    diff = diff / 60;
+	    if (diff < 10) {
+	      return Long.toString(diff) + " hours ago";
+	    }
+
+	    diff = diff / 24;
+	    return Long.toString(diff) + " days ago";
+    }*/

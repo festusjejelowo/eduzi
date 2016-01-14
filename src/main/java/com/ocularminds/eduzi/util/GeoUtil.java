@@ -1,4 +1,4 @@
-package com.ocularminds.eduzi;
+package com.ocularminds.eduzi.util;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -14,9 +14,11 @@ import com.google.gson.JsonParser;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonArray;
+
+import com.ocularminds.eduzi.SearchPlace;
 import com.ocularminds.eduzi.vao.Place;
 
-public class SearchPlace {
+public class GeoUtil {
 
 	public static String EDUZI_GOOGLE_GEOKEY = "AIzaSyDH4-YeYCdjvXN6bbzAoLhypHdu0mCX83o";
 	public static String EDUZI_GOOGLE_DIRKEY = "AIzaSyBXjGHEeOP9ZSQCuOivf-9ZlDQZdalHNa4";
@@ -45,15 +47,29 @@ public class SearchPlace {
 		  System.out.println("calculatet distance place is null");
 		  return 0.00d;
 	  }
+	  return distance(latitude,longitude,place.getLatitude(),place.getLongitude());
+   }
 
-	  double deltalat = Math.toRadians(place.getLatitude() - latitude);
-	  double deltalog = Math.toRadians(place.getLongitude() - longitude);
+      /**
+      * calculates the distance between 2 geographic points
+      * in this case from users ocation and nearby places
+      *
+      * @param longitude - double refrenced location logitude
+      * @param latitude - double referenced location latitude
+      * @param place - Place object being looked for
+      */
+      public static double distance(double latitude,double longitude,double latitude2,double longitude2){
 
-	  double a = Math.pow(Math.sin(deltalat/2),2) +
-				 Math.pow(Math.sin(deltalog/2),2) * Math.cos(latitude) * Math.cos(place.getLatitude());
-	  double c = 2 * Math.asin(Math.sqrt(a));
+   	  double deltalat = Math.toRadians(latitude2 - latitude);
+   	  double deltalog = Math.toRadians(longitude2 - longitude);
 
-	  return EARTH_RADIUS * c;
+   	  double a = Math.pow(Math.sin(deltalat/2),2) +
+   				 Math.pow(Math.sin(deltalog/2),2) *
+   				 Math.cos(latitude) *
+   				 Math.cos(latitude2);
+   	  double c = 2 * Math.asin(Math.sqrt(a));
+
+   	  return EARTH_RADIUS * c;
 
    }
 

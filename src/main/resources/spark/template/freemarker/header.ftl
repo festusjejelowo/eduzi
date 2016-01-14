@@ -47,7 +47,6 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="keywords" content="traffic-monitoring,location based services,predictive analysis,movement,journey planning,mobile app,web scrapping">
-
     <meta property="og:title" content="eduzi | movement" />
     <meta property="og:description" content="eduzi is a traffic-monitoring, journey-planner and events analytic app that will allow commuters, police and business owners know where they have been, learn from what they are doing now, and using these insights to see where they are going and steer their strategy accordingly." />
     <meta property="og:image" content="http://www.eduzi.herokuapp.com/images/logo.png" />
